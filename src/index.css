@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Ensure clean export rendering */
+#bento-base * {
+  word-break: normal;
+}
+
+/* Prevent image distortion beyond object-cover behavior during html2canvas */
+#bento-base img {
+  image-rendering: auto;
+  object-fit: cover;
+}
+
+/* Make text crisper on export/canvas */
+#bento-base, #bento-base * {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
