@@ -66,6 +66,21 @@ npm run build
 npm run lint
 ```
 
+## Deployment
+
+### Netlify
+
+This project is configured for easy deployment on Netlify:
+
+1. **Connect Repository**: Link your GitHub repository to Netlify
+2. **Build Settings**:
+   - Build command: `npm run build`
+   - Publish directory: `dist`
+   - Node version: 18
+3. **Deploy**: Netlify will automatically build and deploy your app
+
+The `netlify.toml` file handles the configuration automatically, including SPA routing support.
+
 ## Project Structure
 
 ```
