@@ -2,6 +2,14 @@
 
 React + TypeScript app for creating draggable bento-style grids. Drag and drop cards, customize with colors/gradients, export as JSON or PNG.
 
+## ⭐ Star This Project
+
+If you find this project useful, please consider giving it a star on GitHub! ⭐
+
+[![GitHub stars](https://img.shields.io/github/stars/aruntemme/bento-generator?style=social)](https://github.com/aruntemme/bento-generator)
+
+Your support helps others discover this project and motivates further development!
+
 ## Features
 
 ### ✅ Implemented
