@@ -226,7 +226,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-100 [background-image:radial-gradient(theme(colors.gray.300)_1px,transparent_0)] [background-size:20px_20px]">
       {/* New Pill-shaped Navbar */}
       <div className="sticky top-4 z-50 px-6">
         <div className="max-w-6xl mx-auto">

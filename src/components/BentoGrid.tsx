@@ -128,11 +128,10 @@ export function BentoGrid({ cards, onCardsChange, onEditCard, onDeleteCard, layo
             id="bento-base"
             ref={baseRef}
             data-hide-border-on-export
-            className="relative rounded-3xl bg-white/0"
+            className="relative rounded-3xl bg-white shadow-xl"
             style={{
               width: `${baseWidth}px`,
               height: `${snappedBaseHeight}px`,
-              border: '1px dashed rgba(148, 163, 184, 0.6)',
               overflow: 'visible',
             }}
           >
