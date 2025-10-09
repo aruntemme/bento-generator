@@ -1,0 +1,27 @@
+# robots.txt for Bento Grid Generator
+# Allow all search engines to crawl the site
+
+User-agent: *
+Allow: /
+
+# Disallow specific paths (if any)
+# Disallow: /private/
+# Disallow: /temp/
+
+# Sitemap location
+Sitemap: https://bento-generator.com/sitemap.xml
+
+# LLMs.txt for AI assistants
+Allow: /llms.txt
+
+# Crawl-delay for specific bots (optional)
+# User-agent: Googlebot
+# Crawl-delay: 0
+
+# Block bad bots (optional)
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+

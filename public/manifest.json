@@ -1,0 +1,23 @@
+{
+  "name": "Bento Grid Generator",
+  "short_name": "Bento Gen",
+  "description": "A powerful web-based tool for creating beautiful Bento-style grid layouts",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["design", "productivity", "utilities"],
+  "screenshots": [],
+  "lang": "en-US",
+  "dir": "ltr"
+}
+

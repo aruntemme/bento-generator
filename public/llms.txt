@@ -1,0 +1,258 @@
+# Bento Grid Generator - llms.txt
+
+> Create beautiful Bento-style grid layouts with an intuitive drag-and-drop interface
+
+## What is Bento Grid Generator?
+
+Bento Grid Generator is a free, web-based design tool that helps you create stunning Bento-style grid layouts. Named after the traditional Japanese lunch box, Bento grids are modern, modular layouts featuring cards of different sizes arranged in an aesthetically pleasing grid pattern.
+
+Perfect for:
+- Portfolio websites
+- Social media link pages
+- Photography showcases
+- Product displays
+- Personal branding
+- Design presentations
+
+## How to Use
+
+### Getting Started
+
+1. **Visit**: https://bento-generator.com
+2. **Add Cards**: Click "Add Card" button and choose a size
+3. **Customize**: Click the edit icon on any card to style it
+4. **Arrange**: Drag and drop cards to rearrange
+5. **Export**: Download as PNG image or save as JSON
+
+No account required. No installation needed. Works directly in your browser.
+
+### Card Sizes
+
+Choose from 4 card sizes:
+
+- **Square** (1×1): Perfect for icons, stats, or small content
+- **Wide** (2×1): Great for titles, quotes, or horizontal content
+- **Portrait** (1×2): Ideal for vertical images or tall content
+- **Large** (2×2): Best for featured images or main content
+
+### Customization Options
+
+**Backgrounds:**
+- Solid colors (any hex color)
+- Background images (paste image URL)
+- Border-only style with transparent fill
+- Custom border colors and widths
+
+**Text:**
+- Add custom text content
+- Choose text color
+- Adjust font size
+- Align horizontally (left, center, right)
+- Align vertically (top, center, bottom)
+- Rotate text orientation (horizontal or vertical)
+
+**Layout:**
+- Drag cards to new positions
+- Cards automatically swap or shift to make room
+- Resize cards by clicking the resize icon
+- Delete unwanted cards anytime
+
+### Templates
+
+Use pre-built templates to get started quickly:
+
+1. **Portfolio Pro** - Professional portfolio layout
+2. **Social Links** - Link-in-bio style layout
+3. **Photography** - Image-focused showcase
+4. **Design Studio** - Creative agency layout
+5. **Product Showcase** - E-commerce product display
+
+Click "Templates" → Select a template → Customize to your needs
+
+### Saving & Exporting
+
+**Save Layouts:**
+- Click "Save" button
+- Name your layout
+- Access saved layouts via "Load" button
+- All layouts stored in your browser (no cloud required)
+
+**Export as PNG:**
+- Click "Image" button
+- High-quality PNG downloads automatically
+- Perfect for sharing on social media
+- Use in presentations or websites
+
+**Export/Import JSON:**
+- Export layout as JSON file
+- Share with others or use as backup
+- Import JSON files to restore layouts
+- Transfer between devices
+
+## Features
+
+### What You Can Do
+
+✓ Create unlimited layouts
+✓ Add up to 18 cards per grid (12×6 grid)
+✓ Customize colors, images, and text
+✓ Drag and drop to rearrange
+✓ Save multiple layouts locally
+✓ Export high-quality images
+✓ Use pre-built templates
+✓ Responsive design (works on mobile)
+✓ No watermarks
+✓ Completely free
+
+### Grid Specifications
+
+- **Grid Size**: 12 columns × 6 rows
+- **Canvas Ratio**: 16:9 (perfect for screens)
+- **Export Resolution**: High-quality 2x scale
+- **Supported Formats**: PNG, JSON
+
+## Common Questions
+
+### Is it really free?
+Yes! Completely free with no hidden costs, subscriptions, or premium features.
+
+### Do I need to create an account?
+No account needed. Start creating immediately.
+
+### Where are my layouts saved?
+Layouts are saved in your browser's local storage. They persist across sessions but are device-specific.
+
+### Can I use my own images?
+Yes! Paste any image URL into the background image field. Note: Some external images may not export due to browser security restrictions.
+
+### Can I share my layouts?
+Yes! Export as JSON and share the file, or export as PNG and share the image.
+
+### Does it work on mobile?
+Yes! The interface is fully responsive and works on phones and tablets.
+
+### Can I use the designs commercially?
+Yes! All designs you create are yours to use however you like.
+
+### What browsers are supported?
+Works best on modern browsers: Chrome, Firefox, Safari, Edge (latest versions).
+
+## Tips & Tricks
+
+### Design Tips
+- Start with a template for inspiration
+- Use contrasting colors for better visual hierarchy
+- Mix different card sizes for dynamic layouts
+- Leave some empty space - don't fill every cell
+- Use high-quality images (min 800px wide)
+
+### Color Combinations
+- Monochrome: Use shades of one color
+- Complementary: Use opposite colors (blue + orange)
+- Triadic: Use three evenly spaced colors
+- Use border-only cards to add variety
+
+### Text Formatting
+- Keep text concise and readable
+- Use larger fonts for headlines (24-32px)
+- Use smaller fonts for body text (14-18px)
+- Ensure good contrast between text and background
+- Try vertical text for unique layouts
+
+### Image URLs
+- Use Unsplash for free high-quality images
+- Format: `https://images.unsplash.com/photo-xxxxx?w=800`
+- Ensure images are publicly accessible
+- Consider image aspect ratio for card size
+
+## Use Cases
+
+### Portfolio Website
+Create a visual grid showcasing your work, skills, and contact information. Perfect for designers, photographers, and creative professionals.
+
+### Link in Bio
+Replace traditional link-in-bio pages with an aesthetic Bento grid featuring your social links, projects, and content.
+
+### Product Display
+Showcase products with images, features, and call-to-action buttons in an organized grid layout.
+
+### Photography Portfolio
+Display your best photos in a visually appealing grid with different sizes emphasizing key images.
+
+### Personal Branding
+Create a unique visual identity with custom colors, typography, and layout that represents you.
+
+### Social Media Content
+Design eye-catching graphics for Instagram, Twitter, or LinkedIn posts.
+
+## Keyboard Shortcuts
+
+Currently, the tool is optimized for mouse/touch interaction. Keyboard shortcuts are planned for a future update.
+
+## Browser Compatibility
+
+- ✓ Chrome/Edge 90+
+- ✓ Firefox 88+
+- ✓ Safari 14+
+- ✓ Mobile browsers (iOS Safari, Chrome Mobile)
+
+## Open Source
+
+Bento Grid Generator is open-source software:
+
+- **License**: MIT (free to use, modify, and distribute)
+- **Repository**: https://github.com/aruntemme/bento-generator
+- **Contribute**: Issues and pull requests welcome
+- **Community**: Built with ❤️ by the open-source community
+
+Star the project on GitHub to support development!
+
+## Support & Feedback
+
+### Need Help?
+- Visit the GitHub repository for documentation
+- Check existing issues for solutions
+- Open a new issue for bug reports or questions
+
+### Feature Requests
+Have an idea for improvement? Open a feature request on GitHub!
+
+### Share Your Creations
+Tag us or share your designs on social media. We love seeing what you create!
+
+## Roadmap
+
+Planned features:
+- Undo/Redo functionality
+- Keyboard shortcuts
+- Custom grid sizes
+- Gradient backgrounds
+- Icon library integration
+- Animation presets
+- More templates
+- Dark mode
+
+## Privacy
+
+- No data collection or tracking
+- No cookies used
+- Layouts stored locally in your browser only
+- No server-side storage
+- No account registration required
+
+## Technical Details
+
+- Built with React and TypeScript
+- Runs entirely in your browser (client-side)
+- No backend servers required
+- Progressive Web App (PWA) capabilities
+- Works offline after first visit
+
+---
+
+**Version**: 0.0.1  
+**Last Updated**: 2025-10-09  
+**Website**: https://bento-generator.com  
+**GitHub**: https://github.com/aruntemme/bento-generator
+
+Made with ❤️ for designers, creators, and anyone who loves beautiful layouts.

@@ -96,6 +96,13 @@ npm run preview
 yarn preview
 ```
 
+### Deploy to Production
+
+Ready to deploy? Check out the [Deployment Guide](DEPLOYMENT.md) for detailed instructions on deploying to:
+- Netlify (Recommended) ⭐
+- Vercel
+- GitHub Pages
+
 ## 📖 Usage Guide
 
 ### Creating Your First Layout

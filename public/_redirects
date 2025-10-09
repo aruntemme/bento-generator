@@ -1,0 +1,9 @@
+# Netlify redirects for Single Page Application
+# This ensures all routes are handled by the React app
+
+# Redirect all routes to index.html for client-side routing
+/*    /index.html   200
+
+# Optional: Redirect www to non-www (uncomment if needed)
+# https://www.bento-generator.com/* https://bento-generator.com/:splat 301!
+

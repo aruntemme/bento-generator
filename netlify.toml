@@ -1,0 +1,63 @@
+# Netlify Build Configuration
+[build]
+  # Build command
+  command = "npm run build"
+  
+  # Directory to deploy (Vite outputs to 'dist' by default)
+  publish = "dist"
+  
+  # Functions directory (if you add serverless functions later)
+  # functions = "netlify/functions"
+
+# Build environment variables
+[build.environment]
+  # Node version
+  NODE_VERSION = "18"
+  
+  # Enable build plugins
+  NPM_FLAGS = "--legacy-peer-deps"
+
+# Headers for better security and performance
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Security headers
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    
+    # Cache control for static assets
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Optimize images
+[[plugins]]
+  package = "@netlify/plugin-lighthouse"
+
+# Deploy contexts
+[context.production]
+  environment = { NODE_ENV = "production" }
+
+[context.deploy-preview]
+  environment = { NODE_ENV = "development" }
+
+[context.branch-deploy]
+  environment = { NODE_ENV = "development" }
+
+# Redirects are handled by the _redirects file
+# But you can also define them here:
+# [[redirects]]
+#   from = "/old-path"
+#   to = "/new-path"
+#   status = 301
+
