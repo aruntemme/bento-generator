@@ -1,6 +1,8 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { BentoCard as BentoCardType, CardSize } from '../types';
+import { Trash2, Palette } from 'lucide-react';
 import { GRID_CONFIG, snapToGrid, isValidPosition, checkCollision, getCardDimensions } from '../utils/gridUtils';
+import { deleteUploadedImage } from '../utils/imageStorage';
 import BentoCard from './BentoCard';
 
 interface GridCanvasProps {
@@ -8,9 +10,11 @@ interface GridCanvasProps {
   onCardsChange: (cardsOrUpdater: BentoCardType[] | ((prev: BentoCardType[]) => BentoCardType[])) => void;
   onEditCard: (card: BentoCardType) => void;
   backgroundColor?: string;
+  onChangeBackgroundColor?: (color: string) => void;
+  onClearAll?: () => void;
 }
 
-const GridCanvas: React.FC<GridCanvasProps> = ({ cards, onCardsChange, onEditCard, backgroundColor }) => {
+const GridCanvas: React.FC<GridCanvasProps> = ({ cards, onCardsChange, onEditCard, backgroundColor, onChangeBackgroundColor, onClearAll }) => {
   const [draggedCard, setDraggedCard] = useState<BentoCardType | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [hoverPosition, setHoverPosition] = useState<{ x: number; y: number } | null>(null);
@@ -391,8 +395,13 @@ const GridCanvas: React.FC<GridCanvasProps> = ({ cards, onCardsChange, onEditCar
   };
 
   const handleDelete = useCallback((id: string) => {
+    // Find the card being deleted and clean up its uploaded image if it has one
+    const cardToDelete = cards.find((c) => c.id === id);
+    if (cardToDelete?.uploadedImageId) {
+      deleteUploadedImage(cardToDelete.uploadedImageId);
+    }
     onCardsChange((prev) => prev.filter((c) => c.id !== id));
-  }, [onCardsChange]);
+  }, [onCardsChange, cards]);
 
   const handleResize = useCallback((id: string, newSize: CardSize) => {
     onCardsChange((prev) => {
@@ -430,7 +439,33 @@ const GridCanvas: React.FC<GridCanvasProps> = ({ cards, onCardsChange, onEditCar
 
   return (
     <div className="w-full h-[calc(100vh-80px)] overflow-auto p-2 sm:p-4 md:p-8">
-      <div className="min-w-max flex justify-center items-center min-h-full">
+      <div className="min-w-max flex flex-col items-center min-h-full justify-center">
+        {/* Controls just above the canvas */}
+        <div
+          style={{ width: `${canvasWidth}px`, minWidth: '800px' }}
+          className="flex items-center justify-between mb-3"
+        >
+          <label className="inline-flex items-center gap-2 h-9 px-3 rounded-md border border-gray-200 bg-white text-gray-700 transition-colors text-sm font-medium shadow-sm" aria-label="Canvas background color">
+            <Palette size={16} />
+            <span className="hidden sm:inline">Canvas BG</span>
+            <input
+              type="color"
+              value={backgroundColor || '#ffffff'}
+              onChange={(e) => onChangeBackgroundColor && onChangeBackgroundColor(e.target.value)}
+              className="ml-2 h-6 w-6 p-0 border-0 bg-transparent cursor-pointer"
+              title="Choose canvas background color"
+            />
+          </label>
+          <button
+            type="button"
+            onClick={() => onClearAll && onClearAll()}
+            className="inline-flex items-center gap-2 h-9 px-3 rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors text-sm font-medium shadow-sm"
+            aria-label="Clear all cards"
+          >
+            <Trash2 size={16} />
+            Clear All
+          </button>
+        </div>
         <div
           style={{
             width: `${canvasWidth}px`,

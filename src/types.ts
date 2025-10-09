@@ -12,6 +12,7 @@ export interface BentoCard {
   y: number;
   backgroundColor?: string;
   backgroundImage?: string;
+  uploadedImageId?: string; // ID to reference uploaded image in storage
   backgroundStyle?: BackgroundStyle;
   borderColor?: string;
   borderWidth?: number;

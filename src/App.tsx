@@ -3,7 +3,8 @@ import { BentoCard, BentoLayout, CardSize } from './types';
 import { GRID_CONFIG, isValidPosition, checkCollision } from './utils/gridUtils';
 import { saveLayout, getLayouts, exportLayoutAsJSON } from './utils/storage';
 import { getTemplateByName, templates } from './lib/templates';
-import { Trash2, Palette } from 'lucide-react';
+import { deleteUploadedImage } from './utils/imageStorage';
+// no icon imports needed here; controls moved into GridCanvas
 import GridCanvas from './components/GridCanvas';
 import EditPanel from './components/EditPanel';
 import Toolbar from './components/Toolbar';
@@ -260,31 +261,6 @@ function App() {
       />
 
       <div className="pt-16 sm:pt-20 relative z-10">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 mb-3 flex items-center justify-end gap-2">
-          <label className="inline-flex items-center gap-2 h-9 px-3 rounded-md border border-gray-200 bg-white text-gray-700 transition-colors text-sm font-medium shadow-sm" aria-label="Canvas background color">
-            <Palette size={16} />
-            <span className="hidden sm:inline">Canvas BG</span>
-            <input
-              type="color"
-              value={canvasBackgroundColor}
-              onChange={(e) => setCanvasBackgroundColor(e.target.value)}
-              className="ml-2 h-6 w-6 p-0 border-0 bg-transparent cursor-pointer"
-              title="Choose canvas background color"
-            />
-          </label>
-          <button
-            type="button"
-            onClick={() => {
-              setCards([]);
-              showModal('All cards have been cleared.', 'success', 'Cleared');
-            }}
-            className="inline-flex items-center gap-2 h-9 px-3 rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors text-sm font-medium shadow-sm"
-            aria-label="Clear all cards"
-          >
-            <Trash2 size={16} />
-            Clear All
-          </button>
-        </div>
         <GridCanvas
           cards={cards}
           onCardsChange={(next) => {
@@ -296,6 +272,17 @@ function App() {
           }}
           onEditCard={handleEditCard}
           backgroundColor={canvasBackgroundColor}
+          onChangeBackgroundColor={(c) => setCanvasBackgroundColor(c)}
+          onClearAll={() => {
+            // Clean up all uploaded images before clearing cards
+            cards.forEach((card) => {
+              if (card.uploadedImageId) {
+                deleteUploadedImage(card.uploadedImageId);
+              }
+            });
+            setCards([]);
+            showModal('All cards have been cleared.', 'success', 'Cleared');
+          }}
         />
       </div>
 

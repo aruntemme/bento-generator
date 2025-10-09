@@ -1,7 +1,8 @@
-import React, { useState, memo } from 'react';
+import React, { useState, memo, useMemo } from 'react';
 import { Trash2, Maximize2, Image, Type, Link as LinkIcon } from 'lucide-react';
 import { BentoCard as BentoCardType, CardSize } from '../types';
 import { getCardDimensions, GRID_CONFIG } from '../utils/gridUtils';
+import { getUploadedImage } from '../utils/imageStorage';
 
 interface BentoCardProps {
   card: BentoCardType;
@@ -33,6 +34,15 @@ const BentoCard: React.FC<BentoCardProps> = memo(({
   const borderWidth = card.borderWidth || 2;
   const borderColor = card.borderColor || card.backgroundColor || '#e5e7eb';
 
+  // Get the actual background image URL (from uploaded image or direct URL)
+  const backgroundImageUrl = useMemo(() => {
+    if (card.uploadedImageId) {
+      const uploadedImage = getUploadedImage(card.uploadedImageId);
+      return uploadedImage?.dataUrl || card.backgroundImage;
+    }
+    return card.backgroundImage;
+  }, [card.uploadedImageId, card.backgroundImage]);
+
   // Helper to lighten a color (for border-only background)
   const lightenColor = (color: string, percent: number = 95) => {
     const hex = color.replace('#', '');
@@ -49,12 +59,12 @@ const BentoCard: React.FC<BentoCardProps> = memo(({
     top: card.y * (GRID_CONFIG.cellSize + GRID_CONFIG.gap),
     width: `${width}px`,
     height: `${height}px`,
-    backgroundColor: card.backgroundImage 
+    backgroundColor: backgroundImageUrl 
       ? 'transparent'
       : backgroundStyle === 'border'
         ? lightenColor(borderColor)
         : card.backgroundColor || '#f3f4f6',
-    backgroundImage: card.backgroundImage ? `url(${card.backgroundImage})` : undefined,
+    backgroundImage: backgroundImageUrl ? `url(${backgroundImageUrl})` : undefined,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     borderRadius: '16px',
@@ -192,6 +202,7 @@ const BentoCard: React.FC<BentoCardProps> = memo(({
     prevProps.card.size === nextProps.card.size &&
     prevProps.card.backgroundColor === nextProps.card.backgroundColor &&
     prevProps.card.backgroundImage === nextProps.card.backgroundImage &&
+    prevProps.card.uploadedImageId === nextProps.card.uploadedImageId &&
     prevProps.card.backgroundStyle === nextProps.card.backgroundStyle &&
     prevProps.card.borderColor === nextProps.card.borderColor &&
     prevProps.card.borderWidth === nextProps.card.borderWidth &&

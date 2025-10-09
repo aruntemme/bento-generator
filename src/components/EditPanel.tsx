@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { X, Image, Type, Link as LinkIcon, Palette, Square, AlignLeft, AlignCenter, AlignRight, AlignHorizontalJustifyStart, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { X, Image, Type, Link as LinkIcon, Palette, Square, AlignLeft, AlignCenter, AlignRight, AlignHorizontalJustifyStart, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd, Upload, Trash2 } from 'lucide-react';
 import { BentoCard, TextAlignment, TextOrientation, VerticalAlignment, BackgroundStyle } from '../types';
 import { getCardDimensions, GRID_CONFIG } from '../utils/gridUtils';
+import { saveUploadedImage, getUploadedImage, deleteUploadedImage } from '../utils/imageStorage';
 
 interface EditPanelProps {
   card: BentoCard | null;
@@ -11,6 +12,8 @@ interface EditPanelProps {
 
 const EditPanel: React.FC<EditPanelProps> = ({ card, onClose, onSave }) => {
   const [editedCard, setEditedCard] = useState<BentoCard | null>(card);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!editedCard) return null;
 
@@ -21,6 +24,83 @@ const EditPanel: React.FC<EditPanelProps> = ({ card, onClose, onSave }) => {
 
   const handleCancel = () => {
     onClose();
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Image size should be less than 2MB');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const uploadedImage = await saveUploadedImage(file);
+      
+      // If there was a previous uploaded image, delete it
+      if (editedCard.uploadedImageId) {
+        deleteUploadedImage(editedCard.uploadedImageId);
+      }
+      
+      setEditedCard({
+        ...editedCard,
+        backgroundImage: uploadedImage.dataUrl,
+        uploadedImageId: uploadedImage.id,
+        backgroundColor: undefined,
+      });
+    } catch (error) {
+      alert('Failed to upload image. Please try again.');
+      console.error('Upload error:', error);
+    } finally {
+      setIsUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleRemoveUploadedImage = () => {
+    if (editedCard.uploadedImageId) {
+      deleteUploadedImage(editedCard.uploadedImageId);
+    }
+    setEditedCard({
+      ...editedCard,
+      backgroundImage: undefined,
+      uploadedImageId: undefined,
+    });
+  };
+
+  const handleImageUrlChange = (url: string) => {
+    // If there was an uploaded image, delete it
+    if (editedCard.uploadedImageId) {
+      deleteUploadedImage(editedCard.uploadedImageId);
+    }
+    
+    setEditedCard({
+      ...editedCard,
+      backgroundImage: url,
+      uploadedImageId: undefined,
+      backgroundColor: url ? undefined : editedCard.backgroundColor,
+    });
+  };
+
+  // Get the actual image URL to display (from uploaded image or URL)
+  const getBackgroundImageUrl = () => {
+    if (editedCard.uploadedImageId) {
+      const uploadedImage = getUploadedImage(editedCard.uploadedImageId);
+      return uploadedImage?.dataUrl || editedCard.backgroundImage;
+    }
+    return editedCard.backgroundImage;
   };
 
   const colors = [
@@ -55,15 +135,17 @@ const EditPanel: React.FC<EditPanelProps> = ({ card, onClose, onSave }) => {
   const previewWidth = cardDimensions.width * (GRID_CONFIG.cellSize + GRID_CONFIG.gap) - GRID_CONFIG.gap;
   const previewHeight = cardDimensions.height * (GRID_CONFIG.cellSize + GRID_CONFIG.gap) - GRID_CONFIG.gap;
 
+  const displayBackgroundImage = getBackgroundImageUrl();
+  
   const previewStyle: React.CSSProperties = {
     width: `${previewWidth}px`,
     height: `${previewHeight}px`,
-    backgroundColor: editedCard.backgroundImage 
+    backgroundColor: displayBackgroundImage 
       ? 'transparent'
       : backgroundStyle === 'border'
         ? lightenColor(borderColor)
         : editedCard.backgroundColor || '#f3f4f6',
-    backgroundImage: editedCard.backgroundImage ? `url(${editedCard.backgroundImage})` : undefined,
+    backgroundImage: displayBackgroundImage ? `url(${displayBackgroundImage})` : undefined,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     borderRadius: '16px',
@@ -217,15 +299,57 @@ const EditPanel: React.FC<EditPanelProps> = ({ card, onClose, onSave }) => {
               <div>
                 <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
                   <Image size={16} />
-                  Background Image URL
+                  Background Image
                 </label>
-                <input
-                  type="text"
-                  value={editedCard.backgroundImage || ''}
-                  onChange={(e) => setEditedCard({ ...editedCard, backgroundImage: e.target.value, backgroundColor: undefined })}
-                  placeholder="https://example.com/image.jpg"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
-                />
+                
+                {/* Upload Image Section */}
+                <div className="mb-3">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id="image-upload"
+                  />
+                  <label
+                    htmlFor="image-upload"
+                    className={`flex items-center justify-center gap-2 w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer transition-colors ${
+                      isUploading ? 'opacity-50 cursor-not-allowed' : 'hover:border-gray-400 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Upload size={16} />
+                    <span className="text-sm font-medium text-gray-700">
+                      {isUploading ? 'Uploading...' : 'Upload Image (max 2MB)'}
+                    </span>
+                  </label>
+                </div>
+
+                {/* Show uploaded image info or URL input */}
+                {editedCard.uploadedImageId ? (
+                  <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <Image size={16} className="text-green-600" />
+                    <span className="text-sm text-green-700 flex-1">Uploaded image attached</span>
+                    <button
+                      onClick={handleRemoveUploadedImage}
+                      className="p-1 hover:bg-green-100 rounded transition-colors"
+                      title="Remove uploaded image"
+                    >
+                      <Trash2 size={16} className="text-red-600" />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="text-center text-xs text-gray-500 my-2">or</div>
+                    <input
+                      type="text"
+                      value={editedCard.backgroundImage || ''}
+                      onChange={(e) => handleImageUrlChange(e.target.value)}
+                      placeholder="https://example.com/image.jpg"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    />
+                  </>
+                )}
               </div>
 
               <div>

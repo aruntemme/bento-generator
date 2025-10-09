@@ -1,6 +1,7 @@
 import { BentoLayout, BentoCard } from '../types';
 
 const STORAGE_KEY = 'bento_layouts';
+const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/400x300?text=Your+Image+Here';
 
 export const saveLayout = (layout: BentoLayout): void => {
   const layouts = getLayouts();
@@ -31,7 +32,26 @@ export const deleteLayout = (id: string): void => {
 };
 
 export const exportLayoutAsJSON = (layout: BentoLayout): void => {
-  const dataStr = JSON.stringify({ ...layout, version: 2 }, null, 2);
+  // Replace uploaded images with placeholder
+  const cardsWithPlaceholders = layout.cards.map((card) => {
+    if (card.uploadedImageId) {
+      // Remove uploaded image data and replace with placeholder
+      const { uploadedImageId, ...cardWithoutUploadedId } = card;
+      return {
+        ...cardWithoutUploadedId,
+        backgroundImage: PLACEHOLDER_IMAGE,
+      };
+    }
+    return card;
+  });
+
+  const exportLayout = {
+    ...layout,
+    cards: cardsWithPlaceholders,
+    version: 2,
+  };
+
+  const dataStr = JSON.stringify(exportLayout, null, 2);
   const dataBlob = new Blob([dataStr], { type: 'application/json' });
   const url = URL.createObjectURL(dataBlob);
   const link = document.createElement('a');
