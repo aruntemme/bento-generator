@@ -4,6 +4,8 @@ A powerful, intuitive web-based tool for creating beautiful Bento-style grid lay
 
 ![Bento Grid Generator](https://img.shields.io/badge/React-18.3-blue) ![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue) ![Vite](https://img.shields.io/badge/Vite-5.4-purple) ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-cyan) ![License](https://img.shields.io/badge/License-MIT-green)
 
+![Bento Grid Generator Preview](https://bento-generator.com/og-image.png)
+
 ## ✨ Features
 
 ### 🎯 Core Functionality
