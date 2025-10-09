@@ -1,7 +1,7 @@
 {
   "name": "bento-grid-generator",
   "private": false,
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A powerful, intuitive web-based tool for creating beautiful Bento-style grid layouts",
   "author": "Bento Grid Generator Contributors",
   "license": "MIT",
