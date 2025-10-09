@@ -1,5 +1,5 @@
 import React, { useState, memo, useMemo } from 'react';
-import { Trash2, Maximize2, Image, Type, Link as LinkIcon } from 'lucide-react';
+import { Trash2, Maximize2, Image, Pencil, Link as LinkIcon } from 'lucide-react';
 import { BentoCard as BentoCardType, CardSize } from '../types';
 import { getCardDimensions, GRID_CONFIG } from '../utils/gridUtils';
 import { getUploadedImage } from '../utils/imageStorage';
@@ -150,7 +150,7 @@ const BentoCard: React.FC<BentoCardProps> = memo(({
             className="p-1.5 sm:p-2 bg-white rounded-lg shadow-md hover:bg-gray-100 transition-colors touch-manipulation"
             title="Edit"
           >
-            <Type size={14} className="text-gray-700 sm:w-4 sm:h-4" />
+            <Pencil size={14} className="text-gray-700 sm:w-4 sm:h-4" />
           </button>
           <button
             onClick={(e) => {
