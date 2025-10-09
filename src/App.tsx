@@ -3,7 +3,7 @@ import { BentoCard, BentoLayout, CardSize } from './types';
 import { GRID_CONFIG, isValidPosition, checkCollision } from './utils/gridUtils';
 import { saveLayout, getLayouts, exportLayoutAsJSON } from './utils/storage';
 import { getTemplateByName, templates } from './lib/templates';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Palette } from 'lucide-react';
 import GridCanvas from './components/GridCanvas';
 import EditPanel from './components/EditPanel';
 import Toolbar from './components/Toolbar';
@@ -16,6 +16,7 @@ function App() {
   const [currentLayoutId, setCurrentLayoutId] = useState<string>('default');
   const [currentLayoutName, setCurrentLayoutName] = useState<string>('My Bento');
   const [editingCard, setEditingCard] = useState<BentoCard | null>(null);
+  const [canvasBackgroundColor, setCanvasBackgroundColor] = useState<string>('#ffffff');
   
   // Modal state
   const [modalState, setModalState] = useState<{
@@ -168,7 +169,7 @@ function App() {
       await new Promise(resolve => setTimeout(resolve, 100));
 
       const canvasElement = await html2canvas(canvasContainer, {
-        backgroundColor: '#ffffff',
+        backgroundColor: canvasBackgroundColor || '#ffffff',
         scale: 2,
         useCORS: true,
         allowTaint: true,
@@ -259,7 +260,18 @@ function App() {
       />
 
       <div className="pt-16 sm:pt-20 relative z-10">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 mb-3 flex items-center justify-end">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 mb-3 flex items-center justify-end gap-2">
+          <label className="inline-flex items-center gap-2 h-9 px-3 rounded-md border border-gray-200 bg-white text-gray-700 transition-colors text-sm font-medium shadow-sm" aria-label="Canvas background color">
+            <Palette size={16} />
+            <span className="hidden sm:inline">Canvas BG</span>
+            <input
+              type="color"
+              value={canvasBackgroundColor}
+              onChange={(e) => setCanvasBackgroundColor(e.target.value)}
+              className="ml-2 h-6 w-6 p-0 border-0 bg-transparent cursor-pointer"
+              title="Choose canvas background color"
+            />
+          </label>
           <button
             type="button"
             onClick={() => {
@@ -283,6 +295,7 @@ function App() {
             }
           }}
           onEditCard={handleEditCard}
+          backgroundColor={canvasBackgroundColor}
         />
       </div>
 

@@ -7,9 +7,10 @@ interface GridCanvasProps {
   cards: BentoCardType[];
   onCardsChange: (cardsOrUpdater: BentoCardType[] | ((prev: BentoCardType[]) => BentoCardType[])) => void;
   onEditCard: (card: BentoCardType) => void;
+  backgroundColor?: string;
 }
 
-const GridCanvas: React.FC<GridCanvasProps> = ({ cards, onCardsChange, onEditCard }) => {
+const GridCanvas: React.FC<GridCanvasProps> = ({ cards, onCardsChange, onEditCard, backgroundColor }) => {
   const [draggedCard, setDraggedCard] = useState<BentoCardType | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [hoverPosition, setHoverPosition] = useState<{ x: number; y: number } | null>(null);
@@ -437,7 +438,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({ cards, onCardsChange, onEditCar
             minWidth: '800px',
             aspectRatio: '16/9',
             position: 'relative',
-            backgroundColor: 'white',
+            backgroundColor: backgroundColor || 'white',
             borderRadius: '16px',
             boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
           }}
@@ -452,10 +453,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({ cards, onCardsChange, onEditCar
             top: `${CANVAS_PADDING}px`,
             width: `${gridWidth}px`,
             height: `${gridHeight}px`,
-            backgroundImage: `
-              repeating-linear-gradient(0deg, transparent, transparent ${GRID_CONFIG.cellSize + GRID_CONFIG.gap}px, #f3f4f6 ${GRID_CONFIG.cellSize + GRID_CONFIG.gap}px, #f3f4f6 ${GRID_CONFIG.cellSize + GRID_CONFIG.gap + 1}px),
-              repeating-linear-gradient(90deg, transparent, transparent ${GRID_CONFIG.cellSize + GRID_CONFIG.gap}px, #f3f4f6 ${GRID_CONFIG.cellSize + GRID_CONFIG.gap}px, #f3f4f6 ${GRID_CONFIG.cellSize + GRID_CONFIG.gap + 1}px)
-            `,
+
             opacity: 0.3,
             pointerEvents: 'none',
           }}
