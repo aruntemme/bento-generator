@@ -16,6 +16,7 @@ export interface BentoCard {
   borderColor?: string;
   borderWidth?: number;
   text?: string;
+  subtitle?: string;
   link?: string;
   textColor?: string;
   textAlignment?: TextAlignment;
@@ -30,6 +31,7 @@ export interface BentoLayout {
   cards: BentoCard[];
   createdAt: number;
   updatedAt: number;
+  version?: number;
 }
 
 export interface GridConfig {

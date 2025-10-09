@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { X, Image, Type, Link as LinkIcon, Palette, Square, Circle, AlignLeft, AlignCenter, AlignRight, AlignHorizontalJustifyStart, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd } from 'lucide-react';
+import { X, Image, Type, Link as LinkIcon, Palette, Square, AlignLeft, AlignCenter, AlignRight, AlignHorizontalJustifyStart, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd } from 'lucide-react';
 import { BentoCard, TextAlignment, TextOrientation, VerticalAlignment, BackgroundStyle } from '../types';
-import { getCardDimensions } from '../utils/gridUtils';
+import { getCardDimensions, GRID_CONFIG } from '../utils/gridUtils';
 
 interface EditPanelProps {
   card: BentoCard | null;
@@ -50,11 +50,10 @@ const EditPanel: React.FC<EditPanelProps> = ({ card, onClose, onSave }) => {
   const borderWidth = editedCard.borderWidth || 2;
   const borderColor = editedCard.borderColor || editedCard.backgroundColor || '#e5e7eb';
 
-  // Get card dimensions based on size
+  // Get card dimensions based on size – match exact grid math
   const cardDimensions = getCardDimensions(editedCard.size);
-  const baseSize = 80; // Base size for preview scaling
-  const previewWidth = cardDimensions.width * baseSize;
-  const previewHeight = cardDimensions.height * baseSize;
+  const previewWidth = cardDimensions.width * (GRID_CONFIG.cellSize + GRID_CONFIG.gap) - GRID_CONFIG.gap;
+  const previewHeight = cardDimensions.height * (GRID_CONFIG.cellSize + GRID_CONFIG.gap) - GRID_CONFIG.gap;
 
   const previewStyle: React.CSSProperties = {
     width: `${previewWidth}px`,
@@ -85,17 +84,16 @@ const EditPanel: React.FC<EditPanelProps> = ({ card, onClose, onSave }) => {
         {/* Live Preview Panel - Top on mobile, Left on desktop */}
         <div className="w-full md:w-2/5 bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-8 flex flex-col">
           <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2 sm:mb-4">Live Preview</h3>
-          <div className="text-xs text-gray-500 mb-2 capitalize">{editedCard.size}</div>
+          <div className="text-xs text-gray-500 mb-3 capitalize">{editedCard.size}</div>
           <div className="flex-1 flex items-center justify-center py-4">
             <div
               style={{
                 ...previewStyle,
                 maxWidth: '100%',
-                maxHeight: '200px',
               }}
               className="shadow-lg relative overflow-hidden"
             >
-              {editedCard.text && (
+              {(editedCard.text || editedCard.subtitle) && (
                 <div 
                   className="p-2 sm:p-4 h-full flex" 
                   style={{ 
@@ -103,7 +101,26 @@ const EditPanel: React.FC<EditPanelProps> = ({ card, onClose, onSave }) => {
                     justifyContent: editedCard.textAlignment === 'center' ? 'center' : editedCard.textAlignment === 'right' ? 'flex-end' : 'flex-start'
                   }}
                 >
-                  <div style={textStyle}>{editedCard.text}</div>
+                  <div>
+                    {editedCard.text && <div style={textStyle}>{editedCard.text}</div>}
+                    {editedCard.subtitle && (
+                      <div
+                        style={{
+                          ...textStyle,
+                          fontSize: `${Math.max(10, (editedCard.fontSize || 16) - 4)}px`,
+                          fontWeight: 500,
+                          opacity: 0.8,
+                        }}
+                      >
+                        {editedCard.subtitle}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              {editedCard.link && (
+                <div className="absolute bottom-2 left-2 opacity-70">
+                  <LinkIcon size={16} className="text-gray-500" />
                 </div>
               )}
             </div>
@@ -122,6 +139,9 @@ const EditPanel: React.FC<EditPanelProps> = ({ card, onClose, onSave }) => {
                 <X size={20} />
               </button>
             </div>
+            <p className="text-xs sm:text-sm text-gray-500 -mt-3 mb-4 sm:mb-6">
+              Make changes below; the live preview reflects exact grid sizing.
+            </p>
 
             <div className="space-y-4 sm:space-y-6">
               {/* Background Style */}
@@ -218,6 +238,19 @@ const EditPanel: React.FC<EditPanelProps> = ({ card, onClose, onSave }) => {
                   onChange={(e) => setEditedCard({ ...editedCard, text: e.target.value })}
                   placeholder="Enter text..."
                   rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-3 block">
+                  Subtitle
+                </label>
+                <input
+                  type="text"
+                  value={editedCard.subtitle || ''}
+                  onChange={(e) => setEditedCard({ ...editedCard, subtitle: e.target.value })}
+                  placeholder="Optional subtitle under title"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
                 />
               </div>

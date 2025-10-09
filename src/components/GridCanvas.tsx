@@ -105,11 +105,6 @@ const GridCanvas: React.FC<GridCanvasProps> = ({ cards, onCardsChange, onEditCar
       return;
     }
 
-    // Store original position
-    const originalX = draggedCard.x;
-    const originalY = draggedCard.y;
-    const originalSize = draggedCard.size;
-
     const otherCards = cards.filter((c) => c.id !== draggedCard.id);
     
     // Find cards that would collide with the new position
@@ -125,7 +120,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({ cards, onCardsChange, onEditCar
       onCardsChange(updatedCards);
     } else {
       // Try to swap/rearrange cards
-      const swapResult = trySwapCards(draggedCard, { x: gridX, y: gridY }, collidingCards, otherCards);
+      const swapResult = trySwapCards(draggedCard, { x: gridX, y: gridY }, collidingCards);
       
       if (swapResult) {
         onCardsChange(swapResult);
@@ -143,8 +138,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({ cards, onCardsChange, onEditCar
   const trySwapCards = (
     draggedCard: BentoCardType,
     newPosition: { x: number; y: number },
-    collidingCards: BentoCardType[],
-    otherCards: BentoCardType[]
+    collidingCards: BentoCardType[]
   ): BentoCardType[] | null => {
     // First, try simple 1:1 swap if only one colliding card
     if (collidingCards.length === 1) {
@@ -214,7 +208,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({ cards, onCardsChange, onEditCar
       if (!placed) {
         // Can't fit this card in original space, try to find another spot
         const excludeIds = [draggedCard.id, ...collidingCards.map(c => c.id)];
-        const newSpot = findEmptySpot(collidingCard.size, excludeIds);
+        const newSpot = localFindEmptySpot(collidingCard.size, excludeIds);
         
         if (newSpot) {
           rearrangedCards.push({ ...collidingCard, x: newSpot.x, y: newSpot.y });
@@ -260,7 +254,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({ cards, onCardsChange, onEditCar
     
     // Try to shift all colliding cards in the opposite direction
     for (const collidingCard of collidingCards) {
-      const collidingDims = getCardDimensions(collidingCard.size);
+      // const collidingDims = getCardDimensions(collidingCard.size);
       let newX = collidingCard.x;
       let newY = collidingCard.y;
       
@@ -379,6 +373,22 @@ const GridCanvas: React.FC<GridCanvasProps> = ({ cards, onCardsChange, onEditCar
     return null;
   };
 
+  const localFindEmptySpot = (
+    size: CardSize,
+    excludeIds: string[] = []
+  ): { x: number; y: number } | null => {
+    for (let y = 0; y < GRID_CONFIG.rows; y++) {
+      for (let x = 0; x < GRID_CONFIG.cols; x++) {
+        if (!isValidPosition(x, y, size, GRID_CONFIG.cols, GRID_CONFIG.rows)) continue;
+        const hasCollision = cards
+          .filter((c) => !excludeIds.includes(c.id))
+          .some((c) => checkCollision({ x, y, size } as unknown as BentoCardType, c));
+        if (!hasCollision) return { x, y };
+      }
+    }
+    return null;
+  };
+
   const handleDelete = useCallback((id: string) => {
     onCardsChange((prev) => prev.filter((c) => c.id !== id));
   }, [onCardsChange]);
@@ -418,7 +428,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({ cards, onCardsChange, onEditCar
   }, [onCardsChange]);
 
   return (
-    <div className="w-full h-[calc(100vh-80px)] bg-gradient-to-br from-gray-50 to-gray-100 overflow-auto p-2 sm:p-4 md:p-8">
+    <div className="w-full h-[calc(100vh-80px)] overflow-auto p-2 sm:p-4 md:p-8">
       <div className="min-w-max flex justify-center items-center min-h-full">
         <div
           style={{

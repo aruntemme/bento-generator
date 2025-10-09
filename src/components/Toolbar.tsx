@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { Plus, Download, Upload, Save, FolderOpen, Sparkles, MoreVertical } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Plus, Download, Upload, Save, FolderOpen, Sparkles, MoreVertical, Star, Briefcase, Link, Camera, Palette, ShoppingBag, Code, Circle } from 'lucide-react';
 import { BentoCard, BentoLayout, CardSize } from '../types';
-import { isValidPosition, checkCollision } from '../utils/gridUtils';
+import { importLayoutFromJSON } from '../utils/storage';
+import { templates } from '../lib/templates';
+import type { Template } from '../lib/templates';
 
 interface ToolbarProps {
   onAddCard: (size: CardSize) => void;
@@ -30,673 +32,150 @@ const Toolbar: React.FC<ToolbarProps> = ({
   const [showLayoutMenu, setShowLayoutMenu] = useState(false);
   const [showTemplateMenu, setShowTemplateMenu] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+
+  const [starCount, setStarCount] = useState<number | null>(null);
+
+  // Refs for click-outside handling
+  const desktopTemplateRef = useRef<HTMLDivElement | null>(null);
+  const desktopSizeRef = useRef<HTMLDivElement | null>(null);
+  const desktopLoadRef = useRef<HTMLDivElement | null>(null);
+  const desktopExportRef = useRef<HTMLDivElement | null>(null);
+
+  const mobileTemplateRef = useRef<HTMLDivElement | null>(null);
+  const mobileSizeRef = useRef<HTMLDivElement | null>(null);
+  const mobileMoreRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handleGlobalMouseDown = (e: MouseEvent) => {
+      const target = e.target as Node;
+      const refs = [
+        desktopTemplateRef,
+        desktopSizeRef,
+        desktopLoadRef,
+        desktopExportRef,
+        mobileTemplateRef,
+        mobileSizeRef,
+        mobileMoreRef,
+      ];
+      const clickedInsideAny = refs.some((r) => r.current && r.current.contains(target));
+      if (!clickedInsideAny) {
+        setShowTemplateMenu(false);
+        setShowSizeMenu(false);
+        setShowLayoutMenu(false);
+        setShowExportMenu(false);
+        setShowMoreMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleGlobalMouseDown);
+    return () => {
+      document.removeEventListener('mousedown', handleGlobalMouseDown);
+    };
+  }, []);
+
+  const getTemplateIcon = (t: Template) => {
+    const name = t.name.toLowerCase();
+    if (name.includes('developer')) return Code;
+    if (name.includes('photo')) return Camera;
+    switch (t.category) {
+      case 'portfolio':
+        return Briefcase;
+      case 'social':
+        return Link;
+      case 'business':
+        return Briefcase;
+      case 'creative':
+        return Palette;
+      case 'ecommerce':
+        return ShoppingBag;
+      case 'personal':
+        return Circle;
+      default:
+        return Circle;
+    }
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchStars = async () => {
+      try {
+        const res = await fetch('https://api.github.com/repos/aruntemme/bento-generator');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (isMounted && typeof data.stargazers_count === 'number') {
+          setStarCount(data.stargazers_count);
+        }
+      } catch {
+        // noop: best-effort only
+      }
+    };
+    fetchStars();
+    const id = setInterval(fetchStars, 1000 * 60 * 10);
+    return () => {
+      isMounted = false;
+      clearInterval(id);
+    };
+  }, []);
 
   const sizes: CardSize[] = ['square', 'wide', 'portrait', 'large'];
 
   const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const layout = JSON.parse(event.target?.result as string) as BentoLayout;
+    importLayoutFromJSON(file)
+      .then((layout) => {
         onImportJSON(layout);
         onShowModal('Layout imported successfully!', 'success', 'Import Complete');
-      } catch (error) {
+      })
+      .catch(() => {
         onShowModal('Invalid JSON file. Please make sure you\'re importing a valid Bento layout file.', 'error', 'Import Failed');
-      }
-    };
-    reader.readAsText(file);
+      });
   };
-
-  const templates = [
-    {
-      name: '✨ Portfolio Pro',
-      cards: [
-        { 
-          id: '1', 
-          size: 'wide' as CardSize, 
-          x: 0, 
-          y: 0, 
-          backgroundColor: '#1f2937', 
-          text: 'Sarah Chen\nCreative Designer', 
-          textColor: '#ffffff',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 24,
-        },
-        { 
-          id: '2', 
-          size: 'square' as CardSize, 
-          x: 4, 
-          y: 0, 
-          backgroundImage: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&auto=format&fit=crop',
-          text: '',
-        },
-        { 
-          id: '3', 
-          size: 'square' as CardSize, 
-          x: 6, 
-          y: 0,
-          backgroundStyle: 'border' as const,
-          borderColor: '#ec4899',
-          borderWidth: 3,
-          text: 'UI/UX',
-          textColor: '#ec4899',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 20,
-        },
-        { 
-          id: '4', 
-          size: 'portrait' as CardSize, 
-          x: 8, 
-          y: 0,
-          backgroundImage: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400',
-          text: '',
-        },
-        { 
-          id: '5', 
-          size: 'square' as CardSize, 
-          x: 10, 
-          y: 0,
-          backgroundColor: '#60a5fa',
-          text: '5+ Years',
-          textColor: '#ffffff',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 18,
-        },
-        { 
-          id: '6', 
-          size: 'large' as CardSize, 
-          x: 0, 
-          y: 2,
-          backgroundImage: 'https://images.unsplash.com/photo-1634942537034-2531766767d1?w=600',
-          text: 'Featured Project',
-          textColor: '#ffffff',
-          textAlignment: 'left' as const,
-          verticalAlignment: 'bottom' as const,
-          fontSize: 22,
-        },
-        { 
-          id: '7', 
-          size: 'wide' as CardSize, 
-          x: 4, 
-          y: 2,
-          backgroundColor: '#fbbf24',
-          text: 'Brand Identity • Web Design • Mobile Apps',
-          textColor: '#1f2937',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 14,
-        },
-        { 
-          id: '8', 
-          size: 'wide' as CardSize, 
-          x: 4, 
-          y: 4,
-          backgroundStyle: 'border' as const,
-          borderColor: '#34d399',
-          borderWidth: 2,
-          text: '📧 hello@sarahchen.design',
-          textColor: '#1f2937',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 16,
-        },
-        { 
-          id: '9', 
-          size: 'square' as CardSize, 
-          x: 10, 
-          y: 2,
-          backgroundColor: '#a78bfa',
-          text: '100+\nProjects',
-          textColor: '#ffffff',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 18,
-        },
-        { 
-          id: '10', 
-          size: 'square' as CardSize, 
-          x: 10, 
-          y: 4,
-          backgroundColor: '#ec4899',
-          text: 'Hire Me',
-          textColor: '#ffffff',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 18,
-        },
-      ],
-    },
-    {
-      name: '🔗 Social Links',
-      cards: [
-        { 
-          id: '1', 
-          size: 'large' as CardSize, 
-          x: 0, 
-          y: 0,
-          backgroundImage: 'https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=600',
-          text: '@alexmorgan',
-          textColor: '#ffffff',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'bottom' as const,
-          fontSize: 28,
-        },
-        { 
-          id: '2', 
-          size: 'wide' as CardSize, 
-          x: 4, 
-          y: 0,
-          backgroundColor: '#1f2937',
-          text: 'GitHub',
-          textColor: '#ffffff',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 20,
-        },
-        { 
-          id: '3', 
-          size: 'square' as CardSize, 
-          x: 8, 
-          y: 0,
-          backgroundColor: '#60a5fa',
-          text: 'Twitter',
-          textColor: '#ffffff',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 18,
-        },
-        { 
-          id: '4', 
-          size: 'square' as CardSize, 
-          x: 10, 
-          y: 0,
-          backgroundColor: '#ec4899',
-          text: 'Instagram',
-          textColor: '#ffffff',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 16,
-        },
-        { 
-          id: '5', 
-          size: 'wide' as CardSize, 
-          x: 4, 
-          y: 2,
-          backgroundColor: '#a78bfa',
-          text: 'LinkedIn',
-          textColor: '#ffffff',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 20,
-        },
-        { 
-          id: '6', 
-          size: 'square' as CardSize, 
-          x: 8, 
-          y: 2,
-          backgroundColor: '#fbbf24',
-          text: 'YouTube',
-          textColor: '#1f2937',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 18,
-        },
-        { 
-          id: '7', 
-          size: 'square' as CardSize, 
-          x: 10, 
-          y: 2,
-          backgroundColor: '#34d399',
-          text: 'Spotify',
-          textColor: '#1f2937',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 18,
-        },
-        { 
-          id: '8', 
-          size: 'wide' as CardSize, 
-          x: 0, 
-          y: 4,
-          backgroundStyle: 'border' as const,
-          borderColor: '#ec4899',
-          borderWidth: 3,
-          text: 'Newsletter',
-          textColor: '#ec4899',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 20,
-        },
-        { 
-          id: '9', 
-          size: 'wide' as CardSize, 
-          x: 4, 
-          y: 4,
-          backgroundColor: '#f87171',
-          text: 'Portfolio',
-          textColor: '#ffffff',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 20,
-        },
-        { 
-          id: '10', 
-          size: 'wide' as CardSize, 
-          x: 8, 
-          y: 4,
-          backgroundStyle: 'border' as const,
-          borderColor: '#60a5fa',
-          borderWidth: 3,
-          text: 'Contact Me',
-          textColor: '#60a5fa',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 20,
-        },
-      ],
-    },
-    {
-      name: '📸 Photography',
-      cards: [
-        { 
-          id: '1', 
-          size: 'square' as CardSize, 
-          x: 0, 
-          y: 0,
-          backgroundImage: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=400',
-          text: '',
-        },
-        { 
-          id: '2', 
-          size: 'wide' as CardSize, 
-          x: 2, 
-          y: 0,
-          backgroundImage: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600',
-          text: '',
-        },
-        { 
-          id: '3', 
-          size: 'portrait' as CardSize, 
-          x: 6, 
-          y: 0,
-          backgroundImage: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400',
-          text: '',
-        },
-        { 
-          id: '4', 
-          size: 'square' as CardSize, 
-          x: 8, 
-          y: 0,
-          backgroundColor: '#1f2937',
-          text: 'Emma\nWilson',
-          textColor: '#ffffff',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 24,
-        },
-        { 
-          id: '5', 
-          size: 'square' as CardSize, 
-          x: 10, 
-          y: 0,
-          backgroundStyle: 'border' as const,
-          borderColor: '#fbbf24',
-          borderWidth: 3,
-          text: 'Travel\nPhotography',
-          textColor: '#fbbf24',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 16,
-        },
-        { 
-          id: '6', 
-          size: 'wide' as CardSize, 
-          x: 0, 
-          y: 2,
-          backgroundImage: 'https://images.unsplash.com/photo-1511593358241-7eea1f3c84e5?w=600',
-          text: '',
-        },
-        { 
-          id: '7', 
-          size: 'large' as CardSize, 
-          x: 8, 
-          y: 2,
-          backgroundImage: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=600',
-          text: 'Landscapes',
-          textColor: '#ffffff',
-          textAlignment: 'left' as const,
-          verticalAlignment: 'bottom' as const,
-          fontSize: 22,
-        },
-        { 
-          id: '8', 
-          size: 'square' as CardSize, 
-          x: 0, 
-          y: 4,
-          backgroundColor: '#60a5fa',
-          text: '50+\nCountries',
-          textColor: '#ffffff',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 18,
-        },
-        { 
-          id: '9', 
-          size: 'square' as CardSize, 
-          x: 2, 
-          y: 4,
-          backgroundImage: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
-          text: '',
-        },
-        { 
-          id: '10', 
-          size: 'wide' as CardSize, 
-          x: 4, 
-          y: 4,
-          backgroundColor: '#ec4899',
-          text: 'Book a Session',
-          textColor: '#ffffff',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 20,
-        },
-      ],
-    },
-    {
-      name: '🎨 Design Studio',
-      cards: [
-        { 
-          id: '1', 
-          size: 'wide' as CardSize, 
-          x: 0, 
-          y: 0,
-          backgroundColor: '#a78bfa',
-          text: 'PIXEL STUDIO',
-          textColor: '#ffffff',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 26,
-        },
-        { 
-          id: '2', 
-          size: 'square' as CardSize, 
-          x: 4, 
-          y: 0,
-          backgroundStyle: 'border' as const,
-          borderColor: '#a78bfa',
-          borderWidth: 3,
-          text: 'Branding',
-          textColor: '#a78bfa',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 18,
-        },
-        { 
-          id: '3', 
-          size: 'portrait' as CardSize, 
-          x: 6, 
-          y: 0,
-          backgroundImage: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?w=400',
-          text: '',
-        },
-        { 
-          id: '4', 
-          size: 'large' as CardSize, 
-          x: 8, 
-          y: 0,
-          backgroundImage: 'https://images.unsplash.com/photo-1558655146-d09347e92766?w=600',
-          text: 'Recent Work',
-          textColor: '#ffffff',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'bottom' as const,
-          fontSize: 24,
-        },
-        { 
-          id: '5', 
-          size: 'square' as CardSize, 
-          x: 0, 
-          y: 2,
-          backgroundColor: '#fbbf24',
-          text: 'Web\nDesign',
-          textColor: '#1f2937',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 20,
-        },
-        { 
-          id: '6', 
-          size: 'square' as CardSize, 
-          x: 2, 
-          y: 2,
-          backgroundColor: '#34d399',
-          text: 'Mobile\nApps',
-          textColor: '#1f2937',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 20,
-        },
-        { 
-          id: '7', 
-          size: 'square' as CardSize, 
-          x: 4, 
-          y: 2,
-          backgroundColor: '#ec4899',
-          text: 'Logo\nDesign',
-          textColor: '#ffffff',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 20,
-        },
-        { 
-          id: '8', 
-          size: 'wide' as CardSize, 
-          x: 0, 
-          y: 4,
-          backgroundColor: '#1f2937',
-          text: 'Let\'s Create Something Amazing',
-          textColor: '#ffffff',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 18,
-        },
-        { 
-          id: '9', 
-          size: 'square' as CardSize, 
-          x: 4, 
-          y: 4,
-          backgroundColor: '#60a5fa',
-          text: '200+\nClients',
-          textColor: '#ffffff',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 18,
-        },
-        { 
-          id: '10', 
-          size: 'square' as CardSize, 
-          x: 6, 
-          y: 4,
-          backgroundStyle: 'border' as const,
-          borderColor: '#ec4899',
-          borderWidth: 3,
-          text: 'Contact',
-          textColor: '#ec4899',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 18,
-        },
-        { 
-          id: '11', 
-          size: 'square' as CardSize, 
-          x: 8, 
-          y: 4,
-          backgroundImage: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400',
-          text: '',
-        },
-        { 
-          id: '12', 
-          size: 'square' as CardSize, 
-          x: 10, 
-          y: 4,
-          backgroundImage: 'https://images.unsplash.com/photo-1572044162444-ad60f128bdea?w=400',
-          text: '',
-        },
-      ],
-    },
-    {
-      name: '🛍️ Product Showcase',
-      cards: [
-        { 
-          id: '1', 
-          size: 'large' as CardSize, 
-          x: 0, 
-          y: 0,
-          backgroundImage: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600',
-          text: 'NEW COLLECTION',
-          textColor: '#ffffff',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'top' as const,
-          fontSize: 28,
-        },
-        { 
-          id: '2', 
-          size: 'square' as CardSize, 
-          x: 4, 
-          y: 0,
-          backgroundColor: '#1f2937',
-          text: '50%\nOFF',
-          textColor: '#fbbf24',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 32,
-        },
-        { 
-          id: '3', 
-          size: 'portrait' as CardSize, 
-          x: 6, 
-          y: 0,
-          backgroundImage: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400',
-          text: '',
-        },
-        { 
-          id: '4', 
-          size: 'square' as CardSize, 
-          x: 8, 
-          y: 0,
-          backgroundColor: '#ec4899',
-          text: 'Free\nShipping',
-          textColor: '#ffffff',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 20,
-        },
-        { 
-          id: '5', 
-          size: 'square' as CardSize, 
-          x: 10, 
-          y: 0,
-          backgroundImage: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400',
-          text: '',
-        },
-        { 
-          id: '6', 
-          size: 'square' as CardSize, 
-          x: 8, 
-          y: 2,
-          backgroundStyle: 'border' as const,
-          borderColor: '#60a5fa',
-          borderWidth: 3,
-          text: 'Premium\nQuality',
-          textColor: '#60a5fa',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 18,
-        },
-        { 
-          id: '7', 
-          size: 'square' as CardSize, 
-          x: 10, 
-          y: 2,
-          backgroundImage: 'https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=400',
-          text: '',
-        },
-        { 
-          id: '8', 
-          size: 'wide' as CardSize, 
-          x: 0, 
-          y: 4,
-          backgroundColor: '#60a5fa',
-          text: 'Shop Now',
-          textColor: '#ffffff',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 24,
-        },
-        { 
-          id: '9', 
-          size: 'square' as CardSize, 
-          x: 4, 
-          y: 4,
-          backgroundColor: '#fbbf24',
-          text: '4.9★\nRated',
-          textColor: '#1f2937',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 20,
-        },
-        { 
-          id: '10', 
-          size: 'square' as CardSize, 
-          x: 6, 
-          y: 4,
-          backgroundColor: '#34d399',
-          text: 'Eco\nFriendly',
-          textColor: '#1f2937',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 18,
-        },
-        { 
-          id: '11', 
-          size: 'wide' as CardSize, 
-          x: 8, 
-          y: 4,
-          backgroundColor: '#a78bfa',
-          text: 'Limited Time Offer',
-          textColor: '#ffffff',
-          textAlignment: 'center' as const,
-          verticalAlignment: 'center' as const,
-          fontSize: 20,
-        },
-      ],
-    },
-  ];
 
   return (
     <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 shadow-sm z-40">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-2 sm:gap-3">
-          <h1 className="text-lg sm:text-2xl font-bold text-gray-900">Bento Generator</h1>
+          <img
+            src="/bento-logo.png"
+            alt="Bento logo"
+            className="h-8 sm:h-10 w-auto object-contain"
+          />
+          <div role="heading" aria-level={1} className="leading-tight select-none">
+            <div className="text-lg sm:text-2xl font-bold text-gray-900">Bento</div>
+            <div className="text-[10px] sm:text-xs text-gray-600 -mt-0.5">Generator</div>
+          </div>
+          
+          {/* GitHub Star Button - Desktop */}
+          <a
+            href="https://github.com/aruntemme/bento-generator"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Star aruntemme/bento-generator on GitHub"
+            className="hidden md:flex items-center gap-2 h-9 px-3 bg-gray-900 text-white rounded-md hover:bg-gray-800 transition-colors text-sm font-medium group border border-gray-800"
+          >
+            <Star size={16} className="text-yellow-300 group-hover:fill-yellow-400 group-hover:text-yellow-400 transition-colors" />
+            <span className="hidden lg:inline">Star on GitHub</span>
+            {starCount !== null && (
+              <span className="ml-1 hidden lg:inline px-2 py-0.5 rounded bg-white/10 text-white text-xs tabular-nums">
+                {starCount.toLocaleString()}
+              </span>
+            )}
+          </a>
         </div>
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-2">
-          <div className="relative">
+          <div className="relative" ref={desktopTemplateRef}>
             <button
               onClick={() => setShowTemplateMenu(!showTemplateMenu)}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+              className="flex items-center gap-2 h-9 px-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors font-medium"
             >
               <Sparkles size={18} />
               Templates
             </button>
             {showTemplateMenu && (
-              <div className="absolute top-full mt-2 right-0 bg-white rounded-lg shadow-lg border border-gray-200 p-2 w-48 z-50">
+              <div className="absolute top-full mt-2 right-0 bg-white rounded-lg shadow-lg border border-gray-200 p-2 w-64 max-h-[32rem] overflow-y-auto z-50">
                 {templates.map((template) => (
                   <button
                     key={template.name}
@@ -704,19 +183,29 @@ const Toolbar: React.FC<ToolbarProps> = ({
                       onApplyTemplate(template.cards);
                       setShowTemplateMenu(false);
                     }}
-                    className="block w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm font-medium"
+                    className="block w-full text-left px-3 py-2.5 rounded hover:bg-gray-100 transition-colors group"
                   >
-                    {template.name}
+                    <div className="flex items-center gap-2">
+                      {(() => { const Icon = getTemplateIcon(template as Template); return <Icon size={18} className="text-gray-600" />; })()}
+                      <div className="flex-1">
+                        <div className="text-sm font-semibold text-gray-900 group-hover:text-gray-700">
+                          {template.name}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          {template.description}
+                        </div>
+                      </div>
+                    </div>
                   </button>
                 ))}
               </div>
             )}
           </div>
 
-          <div className="relative">
+          <div className="relative" ref={desktopSizeRef}>
             <button
               onClick={() => setShowSizeMenu(!showSizeMenu)}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors font-medium"
+              className="flex items-center gap-2 h-9 px-3 bg-gray-900 text-white rounded-md hover:bg-gray-800 transition-colors font-medium"
             >
               <Plus size={18} />
               Add Card
@@ -739,18 +228,20 @@ const Toolbar: React.FC<ToolbarProps> = ({
             )}
           </div>
 
+          <div className="h-6 w-px bg-gray-200 mx-1" />
+
           <button
             onClick={onSaveLayout}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+            className="flex items-center gap-2 h-9 px-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors font-medium"
           >
             <Save size={18} />
             Save
           </button>
 
-          <div className="relative">
+          <div className="relative" ref={desktopLoadRef}>
             <button
               onClick={() => setShowLayoutMenu(!showLayoutMenu)}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+              className="flex items-center gap-2 h-9 px-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors font-medium"
             >
               <FolderOpen size={18} />
               Load
@@ -780,23 +271,43 @@ const Toolbar: React.FC<ToolbarProps> = ({
             )}
           </div>
 
-          <button
-            onClick={onExportImage}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
-          >
-            <Download size={18} />
-            Image
-          </button>
+          <div className="h-6 w-px bg-gray-200 mx-1" />
 
-          <button
-            onClick={onExportJSON}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
-          >
-            <Download size={18} />
-            JSON
-          </button>
+          <div className="relative" ref={desktopExportRef}>
+            <button
+              onClick={() => setShowExportMenu(!showExportMenu)}
+              className="flex items-center gap-2 h-9 px-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors font-medium"
+            >
+              <Download size={18} />
+              Export
+            </button>
+            {showExportMenu && (
+              <div className="absolute top-full mt-2 right-0 bg-white rounded-lg shadow-lg border border-gray-200 p-2 w-44 z-50">
+                <button
+                  onClick={() => {
+                    onExportImage();
+                    setShowExportMenu(false);
+                  }}
+                  className="flex items-center gap-2 w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm font-medium"
+                >
+                  <Download size={16} />
+                  Image
+                </button>
+                <button
+                  onClick={() => {
+                    onExportJSON();
+                    setShowExportMenu(false);
+                  }}
+                  className="flex items-center gap-2 w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm font-medium"
+                >
+                  <Download size={16} />
+                  JSON
+                </button>
+              </div>
+            )}
+          </div>
 
-          <label className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer font-medium">
+          <label className="flex items-center gap-2 h-9 px-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors cursor-pointer font-medium">
             <Upload size={18} />
             Import
             <input
@@ -810,8 +321,19 @@ const Toolbar: React.FC<ToolbarProps> = ({
 
         {/* Mobile Menu */}
         <div className="flex md:hidden items-center gap-2">
+          {/* GitHub Star Button - Mobile */}
+          <a
+            href="https://github.com/aruntemme/bento-generator"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center h-9 w-9 bg-gray-900 text-white rounded-md hover:bg-gray-800 transition-colors group"
+            title="Star on GitHub"
+          >
+            <Star size={16} className="group-hover:fill-yellow-400 group-hover:text-yellow-400 transition-colors" />
+          </a>
+          
           {/* Templates Button - Always visible on mobile */}
-          <div className="relative">
+          <div className="relative" ref={mobileTemplateRef}>
             <button
               onClick={() => {
                 setShowTemplateMenu(!showTemplateMenu);
@@ -823,7 +345,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               <span className="hidden xs:inline">Templates</span>
             </button>
             {showTemplateMenu && (
-              <div className="absolute top-full mt-2 right-0 bg-white rounded-lg shadow-lg border border-gray-200 p-2 w-56 max-h-96 overflow-y-auto z-50">
+              <div className="absolute top-full mt-2 right-0 bg-white rounded-lg shadow-lg border border-gray-200 p-2 w-72 max-h-96 overflow-y-auto z-50">
                 {templates.map((template) => (
                   <button
                     key={template.name}
@@ -831,9 +353,19 @@ const Toolbar: React.FC<ToolbarProps> = ({
                       onApplyTemplate(template.cards);
                       setShowTemplateMenu(false);
                     }}
-                    className="block w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-sm font-medium"
+                    className="block w-full text-left px-3 py-2.5 rounded hover:bg-gray-100 transition-colors group"
                   >
-                    {template.name}
+                    <div className="flex items-center gap-2">
+                      {(() => { const Icon = getTemplateIcon(template as Template); return <Icon size={16} className="text-gray-600" />; })()}
+                      <div className="flex-1">
+                        <div className="text-sm font-semibold text-gray-900 group-hover:text-gray-700">
+                          {template.name}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">
+                          {template.description}
+                        </div>
+                      </div>
+                    </div>
                   </button>
                 ))}
               </div>
@@ -841,7 +373,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           </div>
 
           {/* Add Card Button - Always visible on mobile */}
-          <div className="relative">
+          <div className="relative" ref={mobileSizeRef}>
             <button
               onClick={() => {
                 setShowSizeMenu(!showSizeMenu);
@@ -871,7 +403,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           </div>
 
           {/* More Menu - Contains other actions */}
-          <div className="relative">
+          <div className="relative" ref={mobileMoreRef}>
             <button
               onClick={() => {
                 setShowMoreMenu(!showMoreMenu);

@@ -1,4 +1,4 @@
-import { BentoLayout } from '../types';
+import { BentoLayout, BentoCard } from '../types';
 
 const STORAGE_KEY = 'bento_layouts';
 
@@ -7,9 +7,9 @@ export const saveLayout = (layout: BentoLayout): void => {
   const index = layouts.findIndex((l) => l.id === layout.id);
 
   if (index >= 0) {
-    layouts[index] = { ...layout, updatedAt: Date.now() };
+    layouts[index] = { ...layout, updatedAt: Date.now(), version: 2 };
   } else {
-    layouts.push(layout);
+    layouts.push({ ...layout, version: 2 });
   }
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(layouts));
@@ -31,7 +31,7 @@ export const deleteLayout = (id: string): void => {
 };
 
 export const exportLayoutAsJSON = (layout: BentoLayout): void => {
-  const dataStr = JSON.stringify(layout, null, 2);
+  const dataStr = JSON.stringify({ ...layout, version: 2 }, null, 2);
   const dataBlob = new Blob([dataStr], { type: 'application/json' });
   const url = URL.createObjectURL(dataBlob);
   const link = document.createElement('a');
@@ -46,8 +46,13 @@ export const importLayoutFromJSON = (file: File): Promise<BentoLayout> => {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const layout = JSON.parse(e.target?.result as string) as BentoLayout;
-        resolve(layout);
+        const raw = JSON.parse(e.target?.result as string);
+        const version = typeof raw.version === 'number' ? raw.version : 1;
+        const cards = (raw.cards as BentoCard[]).map((c) => ({
+          ...c,
+          subtitle: c.subtitle ?? '',
+        }));
+        resolve({ ...raw, version, cards } as BentoLayout);
       } catch (error) {
         reject(new Error('Invalid JSON file'));
       }

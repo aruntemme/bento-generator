@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { BentoCard, BentoLayout, CardSize } from './types';
 import { GRID_CONFIG, isValidPosition, checkCollision } from './utils/gridUtils';
 import { saveLayout, getLayouts, exportLayoutAsJSON } from './utils/storage';
+import { getTemplateByName, templates } from './lib/templates';
+import { Trash2 } from 'lucide-react';
 import GridCanvas from './components/GridCanvas';
 import EditPanel from './components/EditPanel';
 import Toolbar from './components/Toolbar';
@@ -47,6 +49,17 @@ function App() {
       setCards(lastLayout.cards);
       setCurrentLayoutId(lastLayout.id);
       setCurrentLayoutName(lastLayout.name);
+    } else {
+      const product = getTemplateByName('Product Showcase') || templates.find(t => t.name.toLowerCase().includes('product'));
+      if (product) {
+        const cardsWithIds = product.cards.map((card, index) => ({
+          ...card,
+          id: `card-${Date.now()}-${index}`,
+        }));
+        setCards(cardsWithIds);
+        setCurrentLayoutId('default');
+        setCurrentLayoutName(product.name);
+      }
     }
   }, []);
 
@@ -210,7 +223,7 @@ function App() {
   };
 
   const handleSaveCard = (updatedCard: BentoCard) => {
-    setCards(cards.map((c) => (c.id === updatedCard.id ? updatedCard : c)));
+    setCards((prev) => prev.map((c) => (c.id === updatedCard.id ? updatedCard : c)));
   };
 
   const handleApplyTemplate = (templateCards: BentoCard[]) => {
@@ -222,7 +235,17 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 relative">
+      {/* Dotted background pattern */}
+      <div 
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `radial-gradient(#cbd5e1 1.5px, transparent 1.5px)`,
+          backgroundSize: '20px 20px',
+          opacity: 0.6,
+        }}
+      />
+      
       <Toolbar
         onAddCard={handleAddCard}
         onExportImage={handleExportImage}
@@ -235,7 +258,21 @@ function App() {
         onShowModal={showModal}
       />
 
-      <div className="pt-16 sm:pt-20">
+      <div className="pt-16 sm:pt-20 relative z-10">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 mb-3 flex items-center justify-end">
+          <button
+            type="button"
+            onClick={() => {
+              setCards([]);
+              showModal('All cards have been cleared.', 'success', 'Cleared');
+            }}
+            className="inline-flex items-center gap-2 h-9 px-3 rounded-md border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors text-sm font-medium shadow-sm"
+            aria-label="Clear all cards"
+          >
+            <Trash2 size={16} />
+            Clear All
+          </button>
+        </div>
         <GridCanvas
           cards={cards}
           onCardsChange={(next) => {

@@ -8,12 +8,10 @@
   "theme_color": "#ffffff",
   "orientation": "portrait-primary",
   "icons": [
-    {
-      "src": "/vite.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
+    { "src": "/bento-logo.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/bento-logo.png", "sizes": "256x256", "type": "image/png" },
+    { "src": "/bento-logo.png", "sizes": "384x384", "type": "image/png" },
+    { "src": "/bento-logo.png", "sizes": "512x512", "type": "image/png" }
   ],
   "categories": ["design", "productivity", "utilities"],
   "screenshots": [],

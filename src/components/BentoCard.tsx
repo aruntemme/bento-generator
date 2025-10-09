@@ -94,7 +94,7 @@ const BentoCard: React.FC<BentoCardProps> = memo(({
       }}
       className={`shadow-lg hover:shadow-xl relative ${showResizeMenu ? 'overflow-visible z-40' : 'overflow-hidden'}`}
     >
-      {card.text && (
+      {(card.text || card.subtitle) && (
         <div 
           className="p-4 h-full flex" 
           style={{ 
@@ -102,7 +102,21 @@ const BentoCard: React.FC<BentoCardProps> = memo(({
             justifyContent: card.textAlignment === 'center' ? 'center' : card.textAlignment === 'right' ? 'flex-end' : 'flex-start'
           }}
         >
-          <div style={textStyle}>{card.text}</div>
+          <div>
+            {card.text && <div style={textStyle}>{card.text}</div>}
+            {card.subtitle && (
+              <div
+                style={{
+                  ...textStyle,
+                  fontSize: `${Math.max(10, (card.fontSize || 16) - 4)}px`,
+                  fontWeight: 500,
+                  opacity: 0.8,
+                }}
+              >
+                {card.subtitle}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -182,6 +196,7 @@ const BentoCard: React.FC<BentoCardProps> = memo(({
     prevProps.card.borderColor === nextProps.card.borderColor &&
     prevProps.card.borderWidth === nextProps.card.borderWidth &&
     prevProps.card.text === nextProps.card.text &&
+    prevProps.card.subtitle === nextProps.card.subtitle &&
     prevProps.card.textColor === nextProps.card.textColor &&
     prevProps.card.textAlignment === nextProps.card.textAlignment &&
     prevProps.card.verticalAlignment === nextProps.card.verticalAlignment &&
