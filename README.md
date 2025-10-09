@@ -80,6 +80,32 @@ A powerful, intuitive web-based tool for creating beautiful Bento-style grid lay
    
    Navigate to `http://localhost:5173`
 
+### Optional: Analytics (PostHog)
+
+Analytics is disabled by default. To enable, set an environment flag and provide your PostHog key.
+
+1. Create an `.env.local` file at the project root with:
+   ```bash
+   VITE_ENABLE_ANALYTICS=true
+   VITE_PUBLIC_POSTHOG_KEY=phc_your_key_here
+   # Optional (defaults to https://us.i.posthog.com)
+   VITE_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com
+   ```
+
+2. Restart the dev server.
+
+3. (Optional) Run the PostHog setup wizard to help configure your project:
+   ```bash
+   npm run analytics:wizard
+   # which runs: npx -y @posthog/wizard@latest
+   ```
+
+If `VITE_ENABLE_ANALYTICS` is not set to `true`, analytics code is not loaded.
+
+## Analytics & Privacy
+
+This project can use [PostHog Cloud](https://posthog.com/) to collect anonymous usage analytics when enabled. This helps improve the software experience, but means some usage data may be sent to PostHog’s servers. See `PRIVACY.md` for full details, including what data is collected and how to opt out.
+
 ### Build for Production
 
 ```bash

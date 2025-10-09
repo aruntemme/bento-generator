@@ -10,6 +10,8 @@ import EditPanel from './components/EditPanel';
 import Toolbar from './components/Toolbar';
 import Modal from './components/Modal';
 import InputModal from './components/InputModal';
+import { trackEvent } from './lib/analytics';
+import AnalyticsNotice from './components/AnalyticsNotice';
 
 function App() {
   const [cards, setCards] = useState<BentoCard[]>([]);
@@ -142,6 +144,13 @@ function App() {
       updatedAt: Date.now(),
     };
     exportLayoutAsJSON(layout);
+    if (import.meta.env.VITE_ENABLE_ANALYTICS === 'true') {
+      trackEvent('export_json', {
+        layoutId: currentLayoutId,
+        layoutName: currentLayoutName,
+        numCards: cards.length,
+      });
+    }
   };
 
   const handleImportJSON = (layout: BentoLayout) => {
@@ -206,6 +215,14 @@ function App() {
           link.click();
           URL.revokeObjectURL(url);
           showModal('Your image has been downloaded successfully!', 'success', 'Export Complete');
+          if (import.meta.env.VITE_ENABLE_ANALYTICS === 'true') {
+            trackEvent('export_image', {
+              layoutId: currentLayoutId,
+              layoutName: currentLayoutName,
+              numCards: cards.length,
+              format: 'png',
+            });
+          }
         } else {
           showModal('Failed to create image. Please try again.', 'error', 'Export Failed');
         }
@@ -311,6 +328,10 @@ function App() {
         placeholder="Enter a name for your layout"
         defaultValue={currentLayoutName}
       />
+
+      {import.meta.env.VITE_ENABLE_ANALYTICS === 'true' && (
+        <AnalyticsNotice />
+      )}
     </div>
   );
 }

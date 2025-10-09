@@ -58,6 +58,7 @@ First off, thank you for considering contributing to Bento Grid Generator! It's 
 
 3. **Update documentation**
    - Update README.md if adding features
+   - Note analytics impacts if adding telemetry; see PRIVACY.md
    - Add JSDoc comments for new functions
    - Update type definitions if needed
 
@@ -331,6 +332,14 @@ Currently, testing is manual. Areas to focus on:
 
 - 💬 [Start a Discussion](https://github.com/aruntemme/bento-generator/discussions)
 - 🐛 [Report an Issue](https://github.com/aruntemme/bento-generator/issues)
+
+## 🔒 Privacy & Analytics
+
+If your contribution touches analytics or telemetry:
+- Ensure analytics only run when `VITE_ENABLE_ANALYTICS === 'true'`.
+- Use `VITE_PUBLIC_POSTHOG_KEY`/`VITE_PUBLIC_POSTHOG_HOST` for client-side keys.
+- Respect `navigator.doNotTrack` and local opt-out via `localStorage.setItem('analytics_opt_out','true')`.
+- Update `PRIVACY.md` and reference it in README if data collection changes.
 
 ## 🙏 Recognition
 
