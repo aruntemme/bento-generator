@@ -238,7 +238,13 @@ function App() {
       <div className="pt-16 sm:pt-20">
         <GridCanvas
           cards={cards}
-          onCardsChange={setCards}
+          onCardsChange={(next) => {
+            if (typeof next === 'function') {
+              setCards((prev) => (next as (p: BentoCard[]) => BentoCard[])(prev));
+            } else {
+              setCards(next);
+            }
+          }}
           onEditCard={handleEditCard}
         />
       </div>

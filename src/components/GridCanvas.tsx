@@ -5,7 +5,7 @@ import BentoCard from './BentoCard';
 
 interface GridCanvasProps {
   cards: BentoCardType[];
-  onCardsChange: (cards: BentoCardType[]) => void;
+  onCardsChange: (cardsOrUpdater: BentoCardType[] | ((prev: BentoCardType[]) => BentoCardType[])) => void;
   onEditCard: (card: BentoCardType) => void;
 }
 
@@ -380,27 +380,42 @@ const GridCanvas: React.FC<GridCanvasProps> = ({ cards, onCardsChange, onEditCar
   };
 
   const handleDelete = useCallback((id: string) => {
-    onCardsChange(cards.filter((c) => c.id !== id));
-  }, [cards, onCardsChange]);
+    onCardsChange((prev) => prev.filter((c) => c.id !== id));
+  }, [onCardsChange]);
 
   const handleResize = useCallback((id: string, newSize: CardSize) => {
-    const card = cards.find((c) => c.id === id);
-    if (!card) return;
+    onCardsChange((prev) => {
+      const card = prev.find((c) => c.id === id);
+      if (!card) return prev;
 
-    if (!isValidPosition(card.x, card.y, newSize, GRID_CONFIG.cols, GRID_CONFIG.rows)) {
-      return;
-    }
+      // Try to resize in-place first
+      if (isValidPosition(card.x, card.y, newSize, GRID_CONFIG.cols, GRID_CONFIG.rows)) {
+        const otherCards = prev.filter((c) => c.id !== id);
+        const hasCollision = otherCards.some((c) =>
+          checkCollision({ ...card, size: newSize }, c)
+        );
+        if (!hasCollision) {
+          return prev.map((c) => (c.id === id ? { ...c, size: newSize } : c));
+        }
+      }
 
-    const otherCards = cards.filter((c) => c.id !== id);
-    const hasCollision = otherCards.some((c) =>
-      checkCollision({ ...card, size: newSize }, c)
-    );
+      // If in-place fails (too big or collides), try to find a new empty spot
+      for (let y = 0; y < GRID_CONFIG.rows; y++) {
+        for (let x = 0; x < GRID_CONFIG.cols; x++) {
+          if (!isValidPosition(x, y, newSize, GRID_CONFIG.cols, GRID_CONFIG.rows)) continue;
+          const hasCollisionAtSpot = prev
+            .filter((c) => c.id !== id)
+            .some((c) => checkCollision({ ...card, x, y, size: newSize }, c));
+          if (!hasCollisionAtSpot) {
+            return prev.map((c) => (c.id === id ? { ...c, x, y, size: newSize } : c));
+          }
+        }
+      }
 
-    if (!hasCollision) {
-      const updatedCards = cards.map((c) => (c.id === id ? { ...c, size: newSize } : c));
-      onCardsChange(updatedCards);
-    }
-  }, [cards, onCardsChange]);
+      // No space available for the new size; keep as-is
+      return prev;
+    });
+  }, [onCardsChange]);
 
   return (
     <div className="w-full h-[calc(100vh-80px)] bg-gradient-to-br from-gray-50 to-gray-100 overflow-auto p-2 sm:p-4 md:p-8">

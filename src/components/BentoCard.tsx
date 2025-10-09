@@ -92,7 +92,7 @@ const BentoCard: React.FC<BentoCardProps> = memo(({
         setShowControls(false);
         setShowResizeMenu(false);
       }}
-      className="shadow-lg hover:shadow-xl relative overflow-hidden"
+      className={`shadow-lg hover:shadow-xl relative ${showResizeMenu ? 'overflow-visible z-40' : 'overflow-hidden'}`}
     >
       {card.text && (
         <div 
@@ -142,7 +142,7 @@ const BentoCard: React.FC<BentoCardProps> = memo(({
       )}
 
       {showResizeMenu && (
-        <div className="absolute top-10 sm:top-12 right-1 sm:right-2 bg-white rounded-lg shadow-lg p-2 z-20 min-w-[100px]">
+        <div className="absolute top-10 sm:top-12 right-1 sm:right-2 bg-white rounded-lg shadow-lg p-2 z-50 min-w-[100px]">
           {sizes.map((size) => (
             <button
               key={size}
