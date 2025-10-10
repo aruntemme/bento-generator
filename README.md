@@ -90,6 +90,10 @@ Analytics is disabled by default. To enable, set an environment flag and provide
    VITE_PUBLIC_POSTHOG_KEY=phc_your_key_here
    # Optional (defaults to https://us.i.posthog.com)
    VITE_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com
+   # Optional: enable verbose logging in dev
+   VITE_ANALYTICS_DEBUG=false
+   # Optional: respect Do Not Track (default true). Set to false to ignore DNT (testing only)
+   VITE_ANALYTICS_RESPECT_DNT=true
    ```
 
 2. Restart the dev server.

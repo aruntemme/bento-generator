@@ -6,7 +6,7 @@ This project can optionally use PostHog Cloud to collect anonymous usage analyti
 
 - Analytics are disabled by default. They are only enabled when `VITE_ENABLE_ANALYTICS` is set to `true` in your environment.
 - When enabled, the app loads the PostHog client using the public key `VITE_PUBLIC_POSTHOG_KEY` and optional host `VITE_PUBLIC_POSTHOG_HOST` (defaults to `https://us.i.posthog.com`).
-- The app respects browser Do Not Track (DNT) and a local opt-out stored in `localStorage`.
+- The app respects browser Do Not Track (DNT) and a local opt-out stored in `localStorage`. You can disable DNT respect for testing by setting `VITE_ANALYTICS_RESPECT_DNT=false` (not recommended for production).
 
 ## What We Collect
 

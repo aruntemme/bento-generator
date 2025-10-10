@@ -21,6 +21,8 @@ export function initializeAnalytics(): void {
 
   const apiKey = import.meta.env.VITE_PUBLIC_POSTHOG_KEY as string | undefined;
   const host = (import.meta.env.VITE_PUBLIC_POSTHOG_HOST as string | undefined) || 'https://us.i.posthog.com';
+  const respectDnt = (import.meta.env.VITE_ANALYTICS_RESPECT_DNT as string | undefined) !== 'false';
+  const debugEnabled = import.meta.env.VITE_ANALYTICS_DEBUG === 'true';
 
   if (!apiKey) {
     // Fail silently if key missing while enabled to avoid app crash
@@ -33,14 +35,22 @@ export function initializeAnalytics(): void {
     autocapture: true,
     capture_pageview: true,
     capture_pageleave: true,
+    debug: debugEnabled,
     loaded: (ph) => {
-      // Respect do-not-track
-      const windowWithDnt = window as Window & { doNotTrack?: string };
-      if (navigator.doNotTrack === '1' || windowWithDnt.doNotTrack === '1') {
-        ph.opt_out_capturing();
+      // Respect Do Not Track by default (can be disabled via env for testing)
+      if (respectDnt) {
+        const windowWithDnt = window as Window & { doNotTrack?: string };
+        if (navigator.doNotTrack === '1' || windowWithDnt.doNotTrack === '1') {
+          ph.opt_out_capturing();
+        }
       }
     },
   });
+
+  // Optional explicit debug toggle if needed in some browsers
+  if (debugEnabled) {
+    try { posthog.debug(true); } catch { /* no-op */ }
+  }
 }
 
 export function trackEvent(event: string, properties?: Record<string, unknown>): void {
