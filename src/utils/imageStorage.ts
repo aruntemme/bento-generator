@@ -103,3 +103,4 @@ export const canAddImage = (fileSize: number, maxTotalSize: number = 5 * 1024 * 
   return (currentSize + fileSize) <= maxTotalSize;
 };
 
+

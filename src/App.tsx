@@ -12,6 +12,7 @@ import Modal from './components/Modal';
 import InputModal from './components/InputModal';
 import { trackEvent } from './lib/analytics';
 import AnalyticsNotice from './components/AnalyticsNotice';
+import { generateRandomLayout } from './lib/randomLayout';
 
 function App() {
   const [cards, setCards] = useState<BentoCard[]>([]);
@@ -253,6 +254,15 @@ function App() {
     setCards(cardsWithIds);
   };
 
+  const handleRandomizeLayout = () => {
+    const randomCards = generateRandomLayout();
+    const cardsWithIds = randomCards.map((card, index) => ({
+      ...card,
+      id: `card-${Date.now()}-${index}-${Math.random()}`,
+    }));
+    setCards(cardsWithIds);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 relative">
       {/* Dotted background pattern */}
@@ -275,6 +285,7 @@ function App() {
         layouts={layouts}
         onApplyTemplate={handleApplyTemplate}
         onShowModal={showModal}
+        onRandomizeLayout={handleRandomizeLayout}
       />
 
       <div className="pt-16 sm:pt-20 relative z-10">

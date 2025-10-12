@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Plus, Download, Upload, Save, FolderOpen, Sparkles, MoreVertical, Star, Briefcase, Link, Camera, Palette, ShoppingBag, Code, Circle } from 'lucide-react';
+import { Plus, Download, Upload, Save, FolderOpen, Sparkles, MoreVertical, Star, Briefcase, Link, Camera, Palette, ShoppingBag, Code, Circle, Shuffle } from 'lucide-react';
 import { BentoCard, BentoLayout, CardSize } from '../types';
 import { importLayoutFromJSON } from '../utils/storage';
 import { templates } from '../lib/templates';
@@ -15,6 +15,7 @@ interface ToolbarProps {
   layouts: BentoLayout[];
   onApplyTemplate: (cards: BentoCard[]) => void;
   onShowModal: (message: string, type: 'success' | 'error' | 'info', title?: string) => void;
+  onRandomizeLayout: () => void;
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({
@@ -27,6 +28,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
   layouts,
   onApplyTemplate,
   onShowModal,
+  onRandomizeLayout,
 }) => {
   const [showSizeMenu, setShowSizeMenu] = useState(false);
   const [showLayoutMenu, setShowLayoutMenu] = useState(false);
@@ -176,6 +178,17 @@ const Toolbar: React.FC<ToolbarProps> = ({
             </button>
             {showTemplateMenu && (
               <div className="absolute top-full mt-2 right-0 bg-white rounded-lg shadow-lg border border-gray-200 p-2 w-64 max-h-[32rem] overflow-y-auto z-50">
+                <button
+                  onClick={() => {
+                    onRandomizeLayout();
+                    setShowTemplateMenu(false);
+                  }}
+                  className="flex items-center gap-2 w-full text-left px-3 py-2.5 rounded hover:bg-gray-100 transition-colors text-sm font-medium"
+                >
+                  <Shuffle size={16} />
+                  Random
+                </button>
+                <div className="h-px my-1 bg-gray-100" />
                 {templates.map((template) => (
                   <button
                     key={template.name}
@@ -201,6 +214,8 @@ const Toolbar: React.FC<ToolbarProps> = ({
               </div>
             )}
           </div>
+
+          {/* Random moved into Templates menu as first option */}
 
           <div className="relative" ref={desktopSizeRef}>
             <button
@@ -346,6 +361,17 @@ const Toolbar: React.FC<ToolbarProps> = ({
             </button>
             {showTemplateMenu && (
               <div className="absolute top-full mt-2 right-0 bg-white rounded-lg shadow-lg border border-gray-200 p-2 w-72 max-h-96 overflow-y-auto z-50">
+                <button
+                  onClick={() => {
+                    onRandomizeLayout();
+                    setShowTemplateMenu(false);
+                  }}
+                  className="flex items-center gap-2 w-full text-left px-3 py-2.5 rounded hover:bg-gray-100 transition-colors text-sm font-medium"
+                >
+                  <Shuffle size={16} />
+                  Random
+                </button>
+                <div className="h-px my-1 bg-gray-100" />
                 {templates.map((template) => (
                   <button
                     key={template.name}
@@ -416,6 +442,8 @@ const Toolbar: React.FC<ToolbarProps> = ({
             </button>
             {showMoreMenu && (
               <div className="absolute top-full mt-2 right-0 bg-white rounded-lg shadow-lg border border-gray-200 p-2 w-48 z-50">
+                {/* Random moved into Templates menu */}
+
                 <button
                   onClick={() => {
                     onSaveLayout();
