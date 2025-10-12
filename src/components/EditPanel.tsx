@@ -104,9 +104,19 @@ const EditPanel: React.FC<EditPanelProps> = ({ card, onClose, onSave }) => {
   };
 
   const colors = [
-    '#f3f4f6', '#fef3c7', '#fecaca', '#fbcfe8', '#ddd6fe',
-    '#bfdbfe', '#a7f3d0', '#fbbf24', '#f87171', '#ec4899',
-    '#a78bfa', '#60a5fa', '#34d399', '#1f2937', '#374151'
+    '#3b82f6', // Blue
+    '#ef4444', // Red
+    '#10b981', // Green
+    '#f59e0b', // Yellow/Orange
+    '#8b5cf6', // Purple
+  ];
+
+  const textColors = [
+    '#000000', // Black
+    '#ffffff', // White
+    '#3b82f6', // Blue
+    '#ef4444', // Red
+    '#10b981', // Green
   ];
 
   // Helper to lighten a color (for border-only background in preview)
@@ -258,7 +268,7 @@ const EditPanel: React.FC<EditPanelProps> = ({ card, onClose, onSave }) => {
                   <Palette size={16} />
                   {backgroundStyle === 'border' ? 'Border Color' : 'Background Color'}
                 </label>
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-5 gap-2 mb-3">
                   {colors.map((color) => (
                     <button
                       key={color}
@@ -276,6 +286,23 @@ const EditPanel: React.FC<EditPanelProps> = ({ card, onClose, onSave }) => {
                       style={{ backgroundColor: color }}
                     />
                   ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <label htmlFor="bg-color-picker" className="text-sm text-gray-600 whitespace-nowrap">
+                    Custom:
+                  </label>
+                  <input
+                    id="bg-color-picker"
+                    type="color"
+                    value={(backgroundStyle === 'border' ? editedCard.borderColor : editedCard.backgroundColor) || '#3b82f6'}
+                    onChange={(e) => setEditedCard({ 
+                      ...editedCard, 
+                      backgroundColor: e.target.value, 
+                      borderColor: backgroundStyle === 'border' ? e.target.value : editedCard.borderColor,
+                      backgroundImage: undefined 
+                    })}
+                    className="flex-1 h-10 rounded-lg border border-gray-300 cursor-pointer"
+                  />
                 </div>
               </div>
 
@@ -383,8 +410,8 @@ const EditPanel: React.FC<EditPanelProps> = ({ card, onClose, onSave }) => {
                 <label className="text-sm font-semibold text-gray-700 mb-3 block">
                   Text Color
                 </label>
-                <div className="grid grid-cols-5 gap-2">
-                  {['#1f2937', '#374151', '#6b7280', '#ffffff', '#fbbf24', '#f87171', '#ec4899', '#a78bfa', '#60a5fa', '#34d399'].map((color) => (
+                <div className="grid grid-cols-5 gap-2 mb-3">
+                  {textColors.map((color) => (
                     <button
                       key={color}
                       onClick={() => setEditedCard({ ...editedCard, textColor: color })}
@@ -394,6 +421,18 @@ const EditPanel: React.FC<EditPanelProps> = ({ card, onClose, onSave }) => {
                       style={{ backgroundColor: color }}
                     />
                   ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <label htmlFor="text-color-picker" className="text-sm text-gray-600 whitespace-nowrap">
+                    Custom:
+                  </label>
+                  <input
+                    id="text-color-picker"
+                    type="color"
+                    value={editedCard.textColor || '#000000'}
+                    onChange={(e) => setEditedCard({ ...editedCard, textColor: e.target.value })}
+                    className="flex-1 h-10 rounded-lg border border-gray-300 cursor-pointer"
+                  />
                 </div>
               </div>
 
