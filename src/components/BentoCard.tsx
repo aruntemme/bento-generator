@@ -1,8 +1,10 @@
-import React, { useState, memo, useMemo } from 'react';
+import React, { useState, memo, useMemo, useEffect } from 'react';
 import { Trash2, Maximize2, Image, Pencil, Link as LinkIcon } from 'lucide-react';
-import { BentoCard as BentoCardType, CardSize } from '../types';
+import { BentoCard as BentoCardType, CardSize, GradientConfig } from '../types';
 import { getCardDimensions, GRID_CONFIG } from '../utils/gridUtils';
 import { getUploadedImage } from '../utils/imageStorage';
+import { isFeatureEnabled } from '../lib/featureFlags';
+import { generateGradientDataURL } from '../lib/gradient/generator';
 
 interface BentoCardProps {
   card: BentoCardType;
@@ -53,18 +55,38 @@ const BentoCard: React.FC<BentoCardProps> = memo(({
     return `rgba(${r + (white - r) * (percent / 100)}, ${g + (white - g) * (percent / 100)}, ${b + (white - b) * (percent / 100)}, 1)`;
   };
 
+  const [gradientUrl, setGradientUrl] = useState<string | undefined>(undefined);
+  const shouldShowGradient = isFeatureEnabled('GRADIENT_CARD_BACKGROUND') && (card.backgroundStyle || 'fill') === 'gradient' && !!card.gradient;
+
+  useEffect(() => {
+    let revoked: string | null = null;
+    if (!shouldShowGradient || !card.gradient) {
+      setGradientUrl(undefined);
+      return;
+    }
+    const run = async () => {
+      const url = await generateGradientDataURL(card.gradient as GradientConfig, Math.max(1, Math.floor(width)), Math.max(1, Math.floor(height)));
+      setGradientUrl(url);
+      if (url.startsWith('blob:')) revoked = url;
+    };
+    run();
+    return () => { if (revoked) URL.revokeObjectURL(revoked); };
+  }, [shouldShowGradient, card.gradient, width, height]);
+
   const style: React.CSSProperties = {
     position: 'absolute',
     left: card.x * (GRID_CONFIG.cellSize + GRID_CONFIG.gap),
     top: card.y * (GRID_CONFIG.cellSize + GRID_CONFIG.gap),
     width: `${width}px`,
     height: `${height}px`,
-    backgroundColor: backgroundImageUrl 
+    backgroundColor: (shouldShowGradient || backgroundImageUrl) 
       ? 'transparent'
       : backgroundStyle === 'border'
         ? lightenColor(borderColor)
         : card.backgroundColor || '#f3f4f6',
-    backgroundImage: backgroundImageUrl ? `url(${backgroundImageUrl})` : undefined,
+    backgroundImage: shouldShowGradient
+      ? (gradientUrl ? `url(${gradientUrl})` : undefined)
+      : (backgroundImageUrl ? `url(${backgroundImageUrl})` : undefined),
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     borderRadius: '16px',
@@ -204,6 +226,7 @@ const BentoCard: React.FC<BentoCardProps> = memo(({
     prevProps.card.backgroundImage === nextProps.card.backgroundImage &&
     prevProps.card.uploadedImageId === nextProps.card.uploadedImageId &&
     prevProps.card.backgroundStyle === nextProps.card.backgroundStyle &&
+    JSON.stringify(prevProps.card.gradient) === JSON.stringify(nextProps.card.gradient) &&
     prevProps.card.borderColor === nextProps.card.borderColor &&
     prevProps.card.borderWidth === nextProps.card.borderWidth &&
     prevProps.card.text === nextProps.card.text &&

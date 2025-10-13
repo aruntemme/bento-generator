@@ -1,6 +1,8 @@
-import React, { useState, useRef } from 'react';
-import { X, Image, Type, Link as LinkIcon, Palette, Square, AlignLeft, AlignCenter, AlignRight, AlignHorizontalJustifyStart, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd, Upload, Trash2 } from 'lucide-react';
-import { BentoCard, TextAlignment, TextOrientation, VerticalAlignment, BackgroundStyle } from '../types';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { X, Image, Type, Link as LinkIcon, Palette, Square, AlignLeft, AlignCenter, AlignRight, AlignHorizontalJustifyStart, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd, Upload, Trash2, Shuffle, RefreshCw, Plus, Minus } from 'lucide-react';
+import { BentoCard, TextAlignment, TextOrientation, VerticalAlignment, BackgroundStyle, GradientConfig } from '../types';
+import { isFeatureEnabled } from '../lib/featureFlags';
+import { generateGradientDataURL } from '../lib/gradient/generator';
 import { getCardDimensions, GRID_CONFIG } from '../utils/gridUtils';
 import { saveUploadedImage, getUploadedImage, deleteUploadedImage } from '../utils/imageStorage';
 
@@ -14,6 +16,53 @@ const EditPanel: React.FC<EditPanelProps> = ({ card, onClose, onSave }) => {
   const [editedCard, setEditedCard] = useState<BentoCard | null>(card);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Gradient preview hooks must be declared before any early returns
+  const [gradientUrl, setGradientUrl] = useState<string | undefined>(undefined);
+  const shouldShowGradient = isFeatureEnabled('GRADIENT_CARD_BACKGROUND') && ((editedCard?.backgroundStyle || 'fill') === 'gradient');
+  const gradientConfig: GradientConfig | undefined = useMemo(() => {
+    if (!editedCard) return undefined;
+    return editedCard.gradient || {
+      mode: 'softBezier',
+      warpShape: 'smoothNoise',
+      warpStrength: 0.5,
+      warpScale: 420,
+      noiseAmount: 0.12,
+      seed: Math.floor(Math.random() * 100000),
+      colors: [editedCard.backgroundColor || '#084300', '#C5DE7F'],
+    };
+  }, [editedCard]);
+
+  useEffect(() => {
+    let revoked: string | null = null;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      (async () => {
+        if (!editedCard || !shouldShowGradient || !gradientConfig) {
+          setGradientUrl(undefined);
+          return;
+        }
+        const dims = getCardDimensions(editedCard.size);
+        const w = dims.width * (GRID_CONFIG.cellSize + GRID_CONFIG.gap) - GRID_CONFIG.gap;
+        const h = dims.height * (GRID_CONFIG.cellSize + GRID_CONFIG.gap) - GRID_CONFIG.gap;
+        const url = await generateGradientDataURL(
+          gradientConfig,
+          Math.max(1, Math.floor(w)),
+          Math.max(1, Math.floor(h)),
+          { qualityScale: 1, signal: controller.signal }
+        );
+        if (!controller.signal.aborted) {
+          setGradientUrl(url);
+          if (url.startsWith('blob:')) revoked = url;
+        }
+      })();
+    }, 120);
+    return () => {
+      controller.abort();
+      clearTimeout(timeoutId);
+      if (revoked) URL.revokeObjectURL(revoked);
+    };
+  }, [editedCard, shouldShowGradient, gradientConfig]);
 
   if (!editedCard) return null;
 
@@ -150,12 +199,14 @@ const EditPanel: React.FC<EditPanelProps> = ({ card, onClose, onSave }) => {
   const previewStyle: React.CSSProperties = {
     width: `${previewWidth}px`,
     height: `${previewHeight}px`,
-    backgroundColor: displayBackgroundImage 
+    backgroundColor: shouldShowGradient || displayBackgroundImage 
       ? 'transparent'
       : backgroundStyle === 'border'
         ? lightenColor(borderColor)
         : editedCard.backgroundColor || '#f3f4f6',
-    backgroundImage: displayBackgroundImage ? `url(${displayBackgroundImage})` : undefined,
+    backgroundImage: shouldShowGradient
+      ? (gradientUrl ? `url(${gradientUrl})` : undefined)
+      : displayBackgroundImage ? `url(${displayBackgroundImage})` : undefined,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     borderRadius: '16px',
@@ -185,6 +236,42 @@ const EditPanel: React.FC<EditPanelProps> = ({ card, onClose, onSave }) => {
               }}
               className="shadow-lg relative overflow-hidden"
             >
+              {/* Draggable color points overlay for gradient */}
+              {shouldShowGradient && gradientConfig?.points && (
+                <div
+                  className="absolute inset-0"
+                  onMouseDown={(e) => {
+                    const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+                    const px = (e.clientX - rect.left) / rect.width;
+                    const py = (e.clientY - rect.top) / rect.height;
+                    // Find nearest point to drag
+                    let idx = -1; let best = Infinity;
+                    gradientConfig.points!.forEach((p, i) => {
+                      const dx = p.x - px; const dy = p.y - py; const d = dx*dx + dy*dy; if (d < best) { best = d; idx = i; }
+                    });
+                    if (idx < 0) return;
+                    const handleMove = (ev: MouseEvent) => {
+                      const r = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+                      const nx = Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width));
+                      const ny = Math.max(0, Math.min(1, (ev.clientY - r.top) / r.height));
+                      setEditedCard({
+                        ...editedCard,
+                        gradient: { ...(gradientConfig as GradientConfig), points: (gradientConfig?.points || []).map((p, i) => i === idx ? { x: nx, y: ny } : p) }
+                      });
+                    };
+                    const handleUp = () => { window.removeEventListener('mousemove', handleMove); window.removeEventListener('mouseup', handleUp); };
+                    window.addEventListener('mousemove', handleMove);
+                    window.addEventListener('mouseup', handleUp);
+                  }}
+                >
+                  {(gradientConfig.points || []).map((p, i) => (
+                    <div key={i} className="absolute w-3 h-3 rounded-full border-2" style={{
+                      left: `${p.x * 100}%`, top: `${p.y * 100}%`, transform: 'translate(-50%, -50%)',
+                      borderColor: i === 0 ? '#084300' : '#ffffff', background: 'transparent'
+                    }} />
+                  ))}
+                </div>
+              )}
               {(editedCard.text || editedCard.subtitle) && (
                 <div 
                   className="p-2 sm:p-4 h-full flex" 
@@ -243,7 +330,7 @@ const EditPanel: React.FC<EditPanelProps> = ({ card, onClose, onSave }) => {
                   Background Style
                 </label>
                 <div className="flex gap-2">
-                  {(['fill', 'border'] as BackgroundStyle[]).map((style) => (
+                  {(["fill", "border", isFeatureEnabled('GRADIENT_CARD_BACKGROUND') ? 'gradient' : null].filter(Boolean) as BackgroundStyle[]).map((style) => (
                     <button
                       key={style}
                       onClick={() => setEditedCard({ 
@@ -266,8 +353,109 @@ const EditPanel: React.FC<EditPanelProps> = ({ card, onClose, onSave }) => {
               <div>
                 <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
                   <Palette size={16} />
-                  {backgroundStyle === 'border' ? 'Border Color' : 'Background Color'}
+                  {backgroundStyle === 'border' ? 'Border Color' : backgroundStyle === 'gradient' ? 'Colors' : 'Background Color'}
                 </label>
+                {backgroundStyle === 'gradient' && isFeatureEnabled('GRADIENT_CARD_BACKGROUND') ? (
+                  <div className="space-y-4">
+                    {/* Color swatches with remove button */}
+                    <div className="space-y-2">
+                      {(gradientConfig?.colors || []).map((c, idx) => (
+                        <div key={idx} className="flex items-center gap-2 group">
+                          <div className="flex items-center gap-2 flex-1 bg-white border border-gray-200 rounded-lg p-2 hover:border-gray-300 transition-colors">
+                            <input
+                              type="color"
+                              value={c}
+                              onChange={(e) => setEditedCard({
+                                ...editedCard,
+                                gradient: {
+                                  ...(gradientConfig as GradientConfig),
+                                  colors: (gradientConfig?.colors || []).map((cc, i) => (i === idx ? e.target.value : cc)),
+                                },
+                              })}
+                              className="h-8 w-8 rounded border-0 cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              value={c.toUpperCase()}
+                              onChange={(e) => {
+                                const hex = e.target.value.startsWith('#') ? e.target.value : `#${e.target.value}`;
+                                if (/^#[0-9A-F]{6}$/i.test(hex)) {
+                                  setEditedCard({
+                                    ...editedCard,
+                                    gradient: {
+                                      ...(gradientConfig as GradientConfig),
+                                      colors: (gradientConfig?.colors || []).map((cc, i) => (i === idx ? hex : cc)),
+                                    },
+                                  });
+                                }
+                              }}
+                              className="flex-1 font-mono text-sm border-0 focus:outline-none bg-transparent"
+                              maxLength={7}
+                            />
+                          </div>
+                          {(gradientConfig?.colors?.length || 0) > 2 && (
+                            <button
+                              onClick={() => setEditedCard({
+                                ...editedCard,
+                                gradient: {
+                                  ...(gradientConfig as GradientConfig),
+                                  colors: (gradientConfig?.colors || []).filter((_, i) => i !== idx),
+                                },
+                              })}
+                              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                              title="Remove color"
+                            >
+                              <Minus size={16} />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      {(gradientConfig?.colors?.length || 0) < 6 && (
+                        <button
+                          onClick={() => setEditedCard({
+                            ...editedCard,
+                            gradient: {
+                              ...(gradientConfig as GradientConfig),
+                              colors: [...(gradientConfig?.colors || ['#0a4300', '#c5de7f']), '#ffffff'],
+                            },
+                          })}
+                          className="w-full p-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-gray-400 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                        >
+                          <Plus size={16} /> Add Color
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Shuffle and Randomize buttons */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          const shuffled = [...(gradientConfig?.colors || [])].sort(() => Math.random() - 0.5);
+                          setEditedCard({
+                            ...editedCard,
+                            gradient: { ...(gradientConfig as GradientConfig), colors: shuffled },
+                          });
+                        }}
+                        className="flex-1 py-2 px-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 text-sm"
+                        title="Shuffle colors"
+                      >
+                        <Shuffle size={14} /> Shuffle
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditedCard({
+                            ...editedCard,
+                            gradient: { ...(gradientConfig as GradientConfig), seed: Math.floor(Math.random() * 100000) },
+                          });
+                        }}
+                        className="flex-1 py-2 px-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 text-sm"
+                        title="Randomize gradient"
+                      >
+                        <RefreshCw size={14} /> Randomize
+                      </button>
+                    </div>
+                  </div>
+                ) : (
                 <div className="grid grid-cols-5 gap-2 mb-3">
                   {colors.map((color) => (
                     <button
@@ -287,23 +475,26 @@ const EditPanel: React.FC<EditPanelProps> = ({ card, onClose, onSave }) => {
                     />
                   ))}
                 </div>
-                <div className="flex items-center gap-2">
-                  <label htmlFor="bg-color-picker" className="text-sm text-gray-600 whitespace-nowrap">
-                    Custom:
-                  </label>
-                  <input
-                    id="bg-color-picker"
-                    type="color"
-                    value={(backgroundStyle === 'border' ? editedCard.borderColor : editedCard.backgroundColor) || '#3b82f6'}
-                    onChange={(e) => setEditedCard({ 
-                      ...editedCard, 
-                      backgroundColor: e.target.value, 
-                      borderColor: backgroundStyle === 'border' ? e.target.value : editedCard.borderColor,
-                      backgroundImage: undefined 
-                    })}
-                    className="flex-1 h-10 rounded-lg border border-gray-300 cursor-pointer"
-                  />
-                </div>
+                )}
+                {backgroundStyle !== 'gradient' && (
+                  <div className="flex items-center gap-2">
+                    <label htmlFor="bg-color-picker" className="text-sm text-gray-600 whitespace-nowrap">
+                      Custom:
+                    </label>
+                    <input
+                      id="bg-color-picker"
+                      type="color"
+                      value={(backgroundStyle === 'border' ? editedCard.borderColor : editedCard.backgroundColor) || '#3b82f6'}
+                      onChange={(e) => setEditedCard({ 
+                        ...editedCard, 
+                        backgroundColor: e.target.value, 
+                        borderColor: backgroundStyle === 'border' ? e.target.value : editedCard.borderColor,
+                        backgroundImage: undefined 
+                      })}
+                      className="flex-1 h-10 rounded-lg border border-gray-300 cursor-pointer"
+                    />
+                  </div>
+                )}
               </div>
 
               {backgroundStyle === 'border' && (
@@ -320,6 +511,116 @@ const EditPanel: React.FC<EditPanelProps> = ({ card, onClose, onSave }) => {
                     className="w-full"
                   />
                   <div className="text-center text-sm text-gray-600 mt-1">{editedCard.borderWidth || 2}px</div>
+                </div>
+              )}
+
+              {backgroundStyle === 'gradient' && isFeatureEnabled('GRADIENT_CARD_BACKGROUND') && (
+                <div className="space-y-4">
+                  {/* Gradient Mode */}
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 mb-2 block">Gradient</label>
+                    <select
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                      value={gradientConfig?.mode || 'sharpBezier'}
+                      onChange={(e) => setEditedCard({
+                        ...editedCard,
+                        gradient: { ...(gradientConfig as GradientConfig), mode: e.target.value as GradientConfig['mode'] },
+                      })}
+                    >
+                      <option value="sharpBezier">Sharp Bézier</option>
+                      <option value="softBezier">Soft Bézier</option>
+                      <option value="meshStatic">Mesh Static</option>
+                      <option value="meshGrid">Mesh Grid</option>
+                      <option value="simple">Simple</option>
+                    </select>
+                  </div>
+
+                  {/* Warp Shape */}
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 mb-2 block">Warp Shape</label>
+                    <select
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                      value={gradientConfig?.warpShape || 'smoothNoise'}
+                      onChange={(e) => setEditedCard({
+                        ...editedCard,
+                        gradient: { ...(gradientConfig as GradientConfig), warpShape: e.target.value as GradientConfig['warpShape'] },
+                      })}
+                    >
+                      <option value="simplexNoise">Simplex Noise</option>
+                      <option value="circular">Circular</option>
+                      <option value="valueNoise">Value Noise</option>
+                      <option value="worleyNoise">Worley Noise</option>
+                      <option value="fbmNoise">FBM Noise</option>
+                      <option value="voronoiNoise">Voronoi Noise</option>
+                      <option value="domainWarping">Domain Warping</option>
+                      <option value="waves">Waves</option>
+                      <option value="smoothNoise">Smooth Noise</option>
+                      <option value="oval">Oval</option>
+                      <option value="rows">Rows</option>
+                      <option value="columns">Columns</option>
+                      <option value="flat">Flat</option>
+                      <option value="gravity">Gravity</option>
+                    </select>
+                  </div>
+
+                  {/* Width Display */}
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-semibold text-gray-700">W</label>
+                    <div className="text-sm text-gray-600">{Math.floor(previewWidth)}</div>
+                    <label className="text-sm font-semibold text-gray-700 ml-4">H</label>
+                    <div className="text-sm text-gray-600">{Math.floor(previewHeight)}</div>
+                  </div>
+
+                  {/* Warp Slider */}
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 mb-2 block">Warp</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      value={gradientConfig?.warpStrength || 0}
+                      onChange={(e) => setEditedCard({
+                        ...editedCard,
+                        gradient: { ...(gradientConfig as GradientConfig), warpStrength: parseFloat(e.target.value) },
+                      })}
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Warp Size Slider */}
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 mb-2 block">Warp Size</label>
+                    <input
+                      type="range"
+                      min="10"
+                      max="600"
+                      step="1"
+                      value={gradientConfig?.warpScale || 200}
+                      onChange={(e) => setEditedCard({
+                        ...editedCard,
+                        gradient: { ...(gradientConfig as GradientConfig), warpScale: parseInt(e.target.value) },
+                      })}
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Noise Slider */}
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 mb-2 block">Noise</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="0.5"
+                      step="0.01"
+                      value={gradientConfig?.noiseAmount || 0}
+                      onChange={(e) => setEditedCard({
+                        ...editedCard,
+                        gradient: { ...(gradientConfig as GradientConfig), noiseAmount: parseFloat(e.target.value) },
+                      })}
+                      className="w-full"
+                    />
+                  </div>
                 </div>
               )}
 
