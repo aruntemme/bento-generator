@@ -343,6 +343,20 @@ function App() {
       {import.meta.env.VITE_ENABLE_ANALYTICS === 'true' && (
         <AnalyticsNotice />
       )}
+
+      {/* Sticky ClaraVerse credit pill */}
+      <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-20">
+        <a
+          href="https://github.com/claraverse-space/ClaraVerse"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group inline-flex items-center gap-2 rounded-full bg-white/90 backdrop-blur px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 shadow-lg ring-1 ring-black/5 hover:bg-white hover:shadow-xl transition whitespace-nowrap"
+          aria-label="From the team of ClaraVerse"
+        >
+          <span className="inline-block h-2 w-2 rounded-full bg-pink-500 animate-pulse" />
+          <span>From the team of ClaraVerse</span>
+        </a>
+      </div>
     </div>
   );
 }
