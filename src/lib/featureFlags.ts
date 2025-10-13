@@ -1,5 +1,6 @@
 export const FEATURE_FLAGS = {
   GRADIENT_CARD_BACKGROUND: true,
+  MULTIPLE_TITLE_FONTS: true,
 } as const;
 
 export type FeatureFlagKey = keyof typeof FEATURE_FLAGS;

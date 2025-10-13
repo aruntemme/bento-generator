@@ -54,6 +54,12 @@ export interface BentoCard {
   verticalAlignment?: VerticalAlignment;
   textOrientation?: TextOrientation;
   fontSize?: number;
+  // Title typography selection (family/weight/style)
+  titleTypography?: {
+    familyId: string;
+    weight?: number;
+    style?: 'normal' | 'italic';
+  };
 }
 
 export interface BentoLayout {

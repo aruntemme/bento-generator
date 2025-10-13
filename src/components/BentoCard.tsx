@@ -5,6 +5,7 @@ import { getCardDimensions, GRID_CONFIG } from '../utils/gridUtils';
 import { getUploadedImage } from '../utils/imageStorage';
 import { isFeatureEnabled } from '../lib/featureFlags';
 import { generateGradientDataURL } from '../lib/gradient/generator';
+import { FONT_CATALOG, ensureFontLoaded } from '../lib/fonts';
 
 interface BentoCardProps {
   card: BentoCardType;
@@ -103,13 +104,30 @@ const BentoCard: React.FC<BentoCardProps> = memo(({
     return 'center';
   };
 
+  const selectedFamily = card.titleTypography?.familyId
+    ? FONT_CATALOG.find(f => f.id === card.titleTypography?.familyId) || FONT_CATALOG[0]
+    : FONT_CATALOG[0];
   const textStyle: React.CSSProperties = {
     color: card.textColor || '#1f2937',
     textAlign: card.textAlignment || 'left',
     fontSize: `${card.fontSize || 16}px`,
-    fontWeight: 600,
+    fontWeight: card.titleTypography?.weight || 600,
+    fontFamily: selectedFamily.fontFamily,
+    fontStyle: card.titleTypography?.style || 'normal',
     writingMode: card.textOrientation === 'vertical' ? 'vertical-rl' : 'horizontal-tb',
   };
+
+  // Load selected font for display
+  useEffect(() => {
+    if (!card.titleTypography) return;
+    const { familyId, weight, style } = card.titleTypography;
+    const familyOption = FONT_CATALOG.find(f => f.id === familyId);
+    if (!familyOption || familyId === 'system') return;
+    const cssFamilyName = familyOption.fontFamily.split(',')[0].trim();
+    const numericWeight = weight || 400;
+    const fontStyle: 'normal' | 'italic' = style || 'normal';
+    ensureFontLoaded(familyId, cssFamilyName.replace(/^'|"/, '').replace(/'|"$/, ''), numericWeight, fontStyle).catch(() => {});
+  }, [card.titleTypography]);
 
   const sizes: CardSize[] = ['square', 'wide', 'portrait', 'large'];
 
@@ -236,6 +254,7 @@ const BentoCard: React.FC<BentoCardProps> = memo(({
     prevProps.card.verticalAlignment === nextProps.card.verticalAlignment &&
     prevProps.card.textOrientation === nextProps.card.textOrientation &&
     prevProps.card.fontSize === nextProps.card.fontSize &&
+    JSON.stringify(prevProps.card.titleTypography) === JSON.stringify(nextProps.card.titleTypography) &&
     prevProps.isDragging === nextProps.isDragging
   );
 });
