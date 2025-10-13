@@ -1,19 +1,23 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <!-- Ensure visually-hidden utility is available before first paint -->
+    <style>
+      .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    </style>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/bento-logo.png" />
     <link rel="apple-touch-icon" href="/bento-logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
     
     <!-- Primary Meta Tags -->
-    <title>Bento Generator - Create Beautiful Bento Layouts Online</title>
-    <meta name="title" content="Bento Generator - Create Beautiful Bento Layouts Online" />
-    <meta name="description" content="A powerful, free web-based tool for creating stunning Bento-style grid layouts. Design, customize, and export beautiful grid compositions with drag-and-drop interface. Perfect for portfolios, social links, and showcases." />
+    <title>Bento Grid Generator – Create, Customize & Export Bento Layouts</title>
+    <meta name="title" content="Bento Grid Generator – Create, Customize & Export Bento Layouts" />
+    <meta name="description" content="Create beautiful bento-style grid layouts in your browser. Drag and drop cards, customize styles, and export high‑resolution images or JSON. Free, fast, and privacy‑friendly." />
     <meta name="keywords" content="bento grid, grid layout generator, bento design, portfolio layout, drag and drop, grid builder, web design tool, layout creator, free design tool" />
     <meta name="author" content="Bento Grid Generator Contributors" />
     <meta name="robots" content="index, follow" />
-    <meta name="language" content="English" />
+    
     <meta name="revisit-after" content="7 days" />
     
     <!-- Theme and Mobile -->
@@ -26,9 +30,10 @@
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://bento-generator.com/" />
-    <meta property="og:title" content="Bento Grid Generator - Create Beautiful Bento Layouts Online" />
-    <meta property="og:description" content="A powerful, free web-based tool for creating stunning Bento-style grid layouts. Design, customize, and export beautiful grid compositions with drag-and-drop interface." />
+    <meta property="og:title" content="Bento Grid Generator – Create, Customize & Export Bento Layouts" />
+    <meta property="og:description" content="Create beautiful bento-style grid layouts in your browser. Drag and drop cards, customize styles, and export high‑resolution images or JSON. Free, fast, and privacy‑friendly." />
     <meta property="og:image" content="https://bento-generator.com/og-image.png" />
+    <meta property="og:locale" content="en_US" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:site_name" content="Bento Grid Generator" />
@@ -36,12 +41,14 @@
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content="https://bento-generator.com/" />
-    <meta name="twitter:title" content="Bento Grid Generator - Create Beautiful Bento Layouts Online" />
-    <meta name="twitter:description" content="A powerful, free web-based tool for creating stunning Bento-style grid layouts. Design, customize, and export beautiful grid compositions with drag-and-drop interface." />
+    <meta name="twitter:title" content="Bento Grid Generator – Create, Customize & Export Bento Layouts" />
+    <meta name="twitter:description" content="Create beautiful bento-style grid layouts in your browser. Drag and drop cards, customize styles, and export high‑resolution images or JSON. Free, fast, and privacy‑friendly." />
     <meta name="twitter:image" content="https://bento-generator.com/og-image.png" />
     
     <!-- Canonical URL -->
     <link rel="canonical" href="https://bento-generator.com/" />
+    <link rel="alternate" href="https://bento-generator.com/" hreflang="en" />
+    <link rel="alternate" href="https://bento-generator.com/" hreflang="x-default" />
     
     <!-- Web App Manifest -->
     <link rel="manifest" href="/manifest.json" />
@@ -90,6 +97,22 @@
     </script>
   </head>
   <body>
+    <!-- Visually hidden page header for SEO without affecting UI -->
+    <h1 class="sr-only">Bento Grid Generator – Design and Export Bento Layouts</h1>
+    <h2 class="sr-only">
+      Create beautiful Bento-style grid layouts with an intuitive drag-and-drop interface, Apple like Bento grid builder.
+    </h2>
+
+    <!-- Hidden internal navigation and anchor targets to improve internal linking -->
+    <nav class="sr-only" aria-hidden="true">
+      <a href="#root">Go to App</a>
+      <a href="#features">Features</a>
+      <a href="#templates">Templates</a>
+      <a href="#export">Export</a>
+    </nav>
+    <div id="features" class="sr-only" aria-hidden="true" tabindex="-1"></div>
+    <div id="templates" class="sr-only" aria-hidden="true" tabindex="-1"></div>
+    <div id="export" class="sr-only" aria-hidden="true" tabindex="-1"></div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
