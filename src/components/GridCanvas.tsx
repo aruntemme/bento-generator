@@ -445,6 +445,22 @@ const GridCanvas: React.FC<GridCanvasProps> = ({ cards, onCardsChange, onEditCar
           style={{ width: `${canvasWidth}px`, minWidth: '800px' }}
           className="flex items-center justify-between mb-3"
         >
+        {/* Product Hunt badge */}
+        <div className="mb-4 flex justify-center">
+          <a
+            href="https://www.producthunt.com/products/bento-grid-generator?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-bento-grid-generator"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img
+              src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1025824&theme=light&t=1760425635529"
+              alt="Bento Grid Generator - Create beautiful bento layouts online | Product Hunt"
+              width="220"
+              height="29"
+            />
+          </a>
+        </div>
+        <div className="flex items-center gap-2">
           <label className="inline-flex items-center gap-2 h-9 px-3 rounded-md border border-gray-200 bg-white text-gray-700 transition-colors text-sm font-medium shadow-sm" aria-label="Canvas background color">
             <Palette size={16} />
             <span className="hidden sm:inline">Canvas BG</span>
@@ -465,6 +481,7 @@ const GridCanvas: React.FC<GridCanvasProps> = ({ cards, onCardsChange, onEditCar
             <Trash2 size={16} />
             Clear All
           </button>
+          </div>
         </div>
         <div
           style={{
