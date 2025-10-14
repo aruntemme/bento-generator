@@ -36,8 +36,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
 
-  const [starCount, setStarCount] = useState<number | null>(null);
-
   // Refs for click-outside handling
   const desktopTemplateRef = useRef<HTMLDivElement | null>(null);
   const desktopSizeRef = useRef<HTMLDivElement | null>(null);
@@ -47,6 +45,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
   const mobileTemplateRef = useRef<HTMLDivElement | null>(null);
   const mobileSizeRef = useRef<HTMLDivElement | null>(null);
   const mobileMoreRef = useRef<HTMLDivElement | null>(null);
+  const buyMeCoffeeRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const handleGlobalMouseDown = (e: MouseEvent) => {
@@ -75,6 +74,27 @@ const Toolbar: React.FC<ToolbarProps> = ({
     };
   }, []);
 
+  // Inject Buy Me a Coffee button script near the logo
+  useEffect(() => {
+    if (!buyMeCoffeeRef.current) return;
+    // Avoid duplicate script injection
+    const existing = buyMeCoffeeRef.current.querySelector('script[data-name="bmc-button"]');
+    if (existing) return;
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = 'https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js';
+    script.setAttribute('data-name', 'bmc-button');
+    script.setAttribute('data-slug', 'aruntemme');
+    script.setAttribute('data-color', '#FFDD00');
+    script.setAttribute('data-emoji', '☕');
+    script.setAttribute('data-font', 'Cookie');
+    script.setAttribute('data-text', 'Buy me a coffee');
+    script.setAttribute('data-outline-color', '#000000');
+    script.setAttribute('data-font-color', '#000000');
+    script.setAttribute('data-coffee-color', '#ffffff');
+    buyMeCoffeeRef.current.appendChild(script);
+  }, []);
+
   const getTemplateIcon = (t: Template) => {
     const name = t.name.toLowerCase();
     if (name.includes('developer')) return Code;
@@ -97,27 +117,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
     }
   };
 
-  useEffect(() => {
-    let isMounted = true;
-    const fetchStars = async () => {
-      try {
-        const res = await fetch('https://api.github.com/repos/aruntemme/bento-generator');
-        if (!res.ok) return;
-        const data = await res.json();
-        if (isMounted && typeof data.stargazers_count === 'number') {
-          setStarCount(data.stargazers_count);
-        }
-      } catch {
-        // noop: best-effort only
-      }
-    };
-    fetchStars();
-    const id = setInterval(fetchStars, 1000 * 60 * 10);
-    return () => {
-      isMounted = false;
-      clearInterval(id);
-    };
-  }, []);
 
   const sizes: CardSize[] = ['square', 'wide', 'portrait', 'large'];
 
@@ -147,23 +146,24 @@ const Toolbar: React.FC<ToolbarProps> = ({
             <div className="text-lg sm:text-2xl font-bold text-gray-900">Bento</div>
             <div className="text-[10px] sm:text-xs text-gray-600 -mt-0.5">Generator</div>
           </div>
-          
-          {/* GitHub Star Button - Desktop */}
+
           <a
-            href="https://github.com/aruntemme/bento-generator"
+            href="https://www.buymeacoffee.com/aruntemme"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Star aruntemme/bento-generator on GitHub"
-            className="hidden md:flex items-center gap-2 h-9 px-3 bg-gray-900 text-white rounded-md hover:bg-gray-800 transition-colors text-sm font-medium group border border-gray-800"
+            className="ml-2 shrink-0"
+            aria-label="Buy me a coffee"
           >
-            <Star size={16} className="text-yellow-300 group-hover:fill-yellow-400 group-hover:text-yellow-400 transition-colors" />
-            <span className="hidden lg:inline">Star on GitHub</span>
-            {starCount !== null && (
-              <span className="ml-1 hidden lg:inline px-2 py-0.5 rounded bg-white/10 text-white text-xs tabular-nums">
-                {starCount.toLocaleString()}
-              </span>
-            )}
+            <img
+              src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png"
+              alt="Buy Me A Coffee"
+              width={120}
+              height={40}
+              style={{ height: 42, width: 140 }}
+            />
           </a>
+        
+          
         </div>
 
         {/* Desktop Menu */}

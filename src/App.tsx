@@ -13,6 +13,7 @@ import InputModal from './components/InputModal';
 import { trackEvent } from './lib/analytics';
 import AnalyticsNotice from './components/AnalyticsNotice';
 import { generateRandomLayout } from './lib/randomLayout';
+import { Star } from 'lucide-react';
 
 function App() {
   const [cards, setCards] = useState<BentoCard[]>([]);
@@ -21,7 +22,8 @@ function App() {
   const [currentLayoutName, setCurrentLayoutName] = useState<string>('My Bento');
   const [editingCard, setEditingCard] = useState<BentoCard | null>(null);
   const [canvasBackgroundColor, setCanvasBackgroundColor] = useState<string>('#ffffff');
-  
+  const [starCount, setStarCount] = useState<number | null>(null);
+
   // Modal state
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
@@ -66,6 +68,28 @@ function App() {
         setCurrentLayoutName(product.name);
       }
     }
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchStars = async () => {
+      try {
+        const res = await fetch('https://api.github.com/repos/aruntemme/bento-generator');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (isMounted && typeof data.stargazers_count === 'number') {
+          setStarCount(data.stargazers_count);
+        }
+      } catch {
+        // noop: best-effort only
+      }
+    };
+    fetchStars();
+    const id = setInterval(fetchStars, 1000 * 60 * 10);
+    return () => {
+      isMounted = false;
+      clearInterval(id);
+    };
   }, []);
 
   const findEmptySpot = (size: CardSize): { x: number; y: number } | null => {
@@ -344,18 +368,35 @@ function App() {
         <AnalyticsNotice />
       )}
 
-      {/* Sticky ClaraVerse credit pill */}
+      {/* Sticky bottom pills */}
       <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-20">
-        <a
-          href="https://github.com/claraverse-space/ClaraVerse"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group inline-flex items-center gap-2 rounded-full bg-white/90 backdrop-blur px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 shadow-lg ring-1 ring-black/5 hover:bg-white hover:shadow-xl transition whitespace-nowrap"
-          aria-label="From the team of ClaraVerse"
-        >
-          <span className="inline-block h-2 w-2 rounded-full bg-pink-500 animate-pulse" />
-          <span>From the team of ClaraVerse</span>
-        </a>
+        <div className="flex items-center gap-2">
+          <a
+            href="https://claraverse.space?utm_source=bento-grid-generator"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group inline-flex items-center gap-2 rounded-full bg-white/90 backdrop-blur px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 shadow-lg ring-1 ring-black/5 hover:bg-white hover:shadow-xl transition whitespace-nowrap"
+            aria-label="From the team of ClaraVerse"
+          >
+            <span className="inline-block h-2 w-2 rounded-full bg-pink-500 animate-pulse" />
+            <span>From the team of ClaraVerse</span>
+          </a>
+          <a
+            href="https://github.com/aruntemme/bento-generator"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Star aruntemme/bento-generator on GitHub"
+            className="hidden md:flex items-center gap-2 h-9 px-3 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition-colors text-sm font-medium group border border-gray-800"
+          >
+            <Star size={16} className="text-yellow-300 group-hover:fill-yellow-400 group-hover:text-yellow-400 transition-colors" />
+            <span className="hidden lg:inline">Star on GitHub</span>
+            {starCount !== null && (
+              <span className="ml-1 hidden lg:inline px-2 py-0.5 rounded bg-white/10 text-white text-xs tabular-nums">
+                {starCount.toLocaleString()}
+              </span>
+            )}
+          </a>
+        </div>
       </div>
     </div>
   );
