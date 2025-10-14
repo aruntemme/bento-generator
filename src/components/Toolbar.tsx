@@ -154,12 +154,17 @@ const Toolbar: React.FC<ToolbarProps> = ({
             className="ml-2 shrink-0"
             aria-label="Buy me a coffee"
           >
+            {/* Mobile: local compact logo */}
+            <img
+              src="/buymeacoffee-logo.png"
+              alt="Buy Me A Coffee"
+              className="h-7 w-auto block sm:hidden"
+            />
+            {/* Desktop: full yellow button */}
             <img
               src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png"
               alt="Buy Me A Coffee"
-              width={120}
-              height={40}
-              style={{ height: 42, width: 140 }}
+              className="hidden sm:block h-10 w-auto"
             />
           </a>
         
